@@ -12,9 +12,4 @@ export default defineConfig({
         react(),
         tailwindcss(),
     ],
-    server: {
-        host: '0.0.0.0',   // 👈 Wajib untuk Windows
-        port: 5173,
-        strictPort: true,
-    },
 });

@@ -1,172 +1,168 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { ChevronRight, Users, Calendar, MessageCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Link } from 'react-router-dom';
+import NavbarBefore from './shared/NavbarBefore';
+import Footer from './shared/Footer';
 
 export default function LandingPage() {
+  const schools = [
+    'SMAK 1 PENABUR Surabaya',
+    'SMAK KARUNIA Surabaya',
+    'SMAK SANTO YOSEF',
+    'SMUK PENABUR 2',
+    'SMAK SANTO PAULUS',
+  ];
+
+  const activities = [
+    { id: 1, title: 'Retret Pemuda 2025', date: '15–17 Februari 2025' },
+    { id: 2, title: 'Bakti Sosial SKK', date: '22 Maret 2025' },
+    { id: 3, title: 'Kebaktian Bersama Lintas Sekolah', date: '5 April 2025' },
+  ];
+
   return (
-    <div className="w-full min-h-screen bg-white text-[#111827]">
-      {/* ================= HERO SECTION ================= */}
-      <section className="w-full bg-linear-to-r from-[#1E40AF] to-[#3B82F6] text-white py-24 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-10">
-          <div className="flex-1">
-            <h1 className="text-4xl lg:text-6xl font-bold leading-tight">
-              Selamat Datang di <span className="text-[#FACC15]">SKK Community</span>
-            </h1>
-            <p className="mt-4 text-lg text-blue-100 max-w-lg">
-              Komunitas Sri Kerohanian Kristen yang berfokus membangun iman,
-              kebersamaan, dan pelayanan sesama dalam lingkungan sekolah.
-            </p>
-
-            <div className="mt-8 flex gap-4">
-              <Link to="/register">
-                <Button className="bg-[#FACC15] text-black font-semibold px-6 py-3 rounded-xl hover:bg-yellow-400">
-                  Bergabung Sekarang
-                </Button>
-              </Link>
-
-              <Link to="/events">
-                <Button variant="outline" className="border-white text-white hover:bg-white/10 px-6 py-3 rounded-xl">
-                  Lihat Kegiatan
-                </Button>
-              </Link>
+    <>
+      <NavbarBefore />
+      <div className="flex flex-col min-h-screen bg-white font-sans overflow-x-hidden">
+        {/* Hero Section — Lebih Minimalis & Clean */}
+        <section className="relative bg-gradient-to-br from-[#FDE68A] to-[#FACC15] text-black pt-24 pb-20 md:pt-32 md:pb-28 overflow-hidden">
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="max-w-5xl mx-auto text-center">
+              <div className="inline-flex items-center gap-2 bg-black text-[#FACC15] px-5 py-1.5 rounded-full text-sm font-semibold mb-6">
+                <span>✨</span>
+                Komunitas Siswa Kristen Surabaya
+              </div>
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 leading-tight">
+                Bersatu dalam <span className="text-black">Kasih Kristus</span>
+              </h1>
+              <p className="text-lg md:text-xl text-[#374151] max-w-2xl mx-auto mb-10 leading-relaxed">
+                Wadah digital untuk siswa Kristen lintas sekolah bersekutu, melayani, dan bertumbuh bersama.
+              </p>
+              <div className="flex flex-col sm:flex-row justify-center gap-5">
+                <Link to="/register">
+                  <Button
+                    className="bg-white text-black hover:bg-gray-50 border border-gray-200 text-lg px-9 py-4 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-200"
+                  >
+                    👥 Daftar Anggota
+                  </Button>
+                </Link>
+                <Link to="/donasi">
+                  <Button
+                    className="bg-white text-black hover:bg-gray-50 border border-gray-200 text-lg px-9 py-4 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-200"
+                  >
+                    💛 Berikan Donasi
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
+        </section>
 
-          <div className="flex-1 flex justify-center">
-            <img
-              src="/hero-skk.svg"
-              alt="SKK Illustration"
-              className="w-80 lg:w-[420px] drop-shadow-2xl"
-            />
+        {/* Fitur Utama — Flat & Clean */}
+        <section className="py-24 bg-white">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-center text-[#374151] mb-4">
+              Platform untuk Generasi Muda Kristen
+            </h2>
+            <p className="text-center text-[#6B7280] max-w-2xl mx-auto mb-16">
+              Bangun persaudaraan, layani sesama, dan bertumbuh dalam iman — semua dalam satu platform.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+              {[
+                { icon: '👥', title: 'Persekutuan', desc: 'Bangun relasi lintas sekolah' },
+                { icon: '🙌', title: 'Pelayanan', desc: 'Layani sesama lewat kegiatan nyata' },
+                { icon: '📖', title: 'Firman Tuhan', desc: 'Renungan & khotbah harian' },
+                { icon: '🤝', title: 'Donasi', desc: 'Dukung pelayanan dengan berbagi' },
+              ].map((item, i) => (
+                <Card
+                  key={i}
+                  className="bg-[#FEF9C3] hover:bg-[#FFFBE6] border border-[#FDE68A] rounded-xl p-6 text-center shadow-sm hover:shadow-md transition-all duration-200"
+                >
+                  <div className="text-4xl mb-3">{item.icon}</div>
+                  <h3 className="font-bold text-[#374151] text-lg mb-2">{item.title}</h3>
+                  <p className="text-[#6B7280] text-sm">{item.desc}</p>
+                </Card>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ================= ABOUT SECTION ================= */}
-      <section className="py-20 px-6">
-        <div className="max-w-6xl mx-auto text-center">
-          <h2 className="text-3xl font-extrabold text-[#1E40AF]">Tentang SKK</h2>
-          <p className="mt-4 text-gray-600 max-w-2xl mx-auto">
-            SKK (Sri Kerohanian Kristen) adalah komunitas yang berfokus untuk membangun kehidupan rohani,
-            mengembangkan bakat, dan mempererat persaudaraan antar siswa.
-          </p>
-        </div>
+        {/* Sekolah & Kegiatan — Lebih Visual */}
+        <section className="py-24 bg-[#FEF9C3]">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              {/* Sekolah */}
+              <div>
+                <h2 className="text-3xl font-bold text-[#374151] mb-6">Sekolah-Sekolah Anggota</h2>
+                <p className="text-[#6B7280] mb-8">
+                  Lebih dari 15 sekolah Kristen di Surabaya telah bergabung dalam komunitas ini.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {schools.map((school, i) => (
+                    <span
+                      key={i}
+                      className="bg-white px-4 py-2 rounded-full text-[#374151] text-sm font-medium border border-[#FDE68A] shadow-sm"
+                    >
+                      {school}
+                    </span>
+                  ))}
+                </div>
+              </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 max-w-6xl mx-auto">
-          <Card className="shadow-md rounded-2xl">
-            <CardHeader>
-              <Users className="w-10 h-10 text-[#3B82F6]" />
-              <CardTitle className="mt-2">Komunitas Positif</CardTitle>
-            </CardHeader>
-            <CardContent className="text-gray-600">
-              Tempat berkumpulnya siswa untuk saling menguatkan, belajar, dan bertumbuh bersama.
-            </CardContent>
-          </Card>
+              {/* Kegiatan */}
+              <div>
+                <h2 className="text-3xl font-bold text-[#374151] mb-6">Kegiatan Terbaru</h2>
+                <div className="space-y-4">
+                  {activities.map((act) => (
+                    <div
+                      key={act.id}
+                      className="bg-white p-4 rounded-xl border-l-4 border-[#FACC15] shadow-sm"
+                    >
+                      <div className="font-bold text-[#374151]">{act.title}</div>
+                      <div className="text-[#6B7280] text-sm">{act.date}</div>
+                    </div>
+                  ))}
+                </div>
+                <Link to="/kegiatan" className="inline-block mt-6 text-[#FACC15] font-semibold hover:underline">
+                  Lihat semua kegiatan →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
 
-          <Card className="shadow-md rounded-2xl">
-            <CardHeader>
-              <Calendar className="w-10 h-10 text-[#3B82F6]" />
-              <CardTitle className="mt-2">Kegiatan Spiritual</CardTitle>
-            </CardHeader>
-            <CardContent className="text-gray-600">
-              Mulai dari ibadah, renungan, hingga kegiatan sosial yang membangun karakter.
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-md rounded-2xl">
-            <CardHeader>
-              <MessageCircle className="w-10 h-10 text-[#3B82F6]" />
-              <CardTitle className="mt-2">Forum Diskusi</CardTitle>
-            </CardHeader>
-            <CardContent className="text-gray-600">
-              Tempat berbagi cerita, pertanyaan, dan pengalaman rohani.
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* ================= KEGIATAN SECTION ================= */}
-      <section className="py-20 px-6 bg-[#F9FAFB]">
-        <div className="max-w-6xl mx-auto text-center">
-          <h2 className="text-3xl font-extrabold text-[#1E40AF]">Kegiatan Terbaru</h2>
-          <p className="mt-4 text-gray-600">
-            Ikuti berbagai kegiatan yang memperkuat iman dan kebersamaan.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 max-w-6xl mx-auto">
-          {[1, 2, 3].map((item) => (
-            <Card className="rounded-2xl shadow-lg" key={item}>
-              <img
-                src={`https://source.unsplash.com/random/800x600?church,community,${item}`}
-                alt="Event"
-                className="rounded-t-2xl h-48 w-full object-cover"
-              />
-              <CardHeader>
-                <CardTitle className="text-lg">Kegiatan Rohani #{item}</CardTitle>
-              </CardHeader>
-              <CardContent className="text-gray-600">
-                Kegiatan komunitas untuk membangun kebersamaan dan memperkuat iman siswa.
-              </CardContent>
-
-              <div className="px-6 pb-6">
-                <Link to={`/events/${item}`}>
-                  <Button className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white">
-                    Lihat Detail
+        {/* CTA Final — Sesuai Screenshot */}
+        <section className="py-20 bg-[#FACC15] text-white text-center">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto">
+              <h2 className="text-3xl md:text-4xl font-extrabold mb-4">
+                Jadilah Bagian dari Gerakan Ini
+              </h2>
+              <p className="mb-8 opacity-90">
+                Setiap donasi, doa, dan partisipasimu membawa damai sejahtera bagi banyak orang.
+              </p>
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <Link to="/donasi">
+                  <Button
+                    className="bg-white text-black hover:bg-gray-50 border border-gray-200 font-bold px-8 py-4 rounded-xl text-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
+                  >
+                    <span>💛</span> Berikan Donasi
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button
+                    className="bg-white text-black hover:bg-gray-50 border border-gray-200 font-bold px-8 py-4 rounded-xl text-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
+                  >
+                    <span>👥</span> Daftar Anggota
                   </Button>
                 </Link>
               </div>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* ================= FORUM PREVIEW ================= */}
-      <section className="py-20 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center mb-10">
-          <h2 className="text-3xl font-extrabold text-[#1E40AF]">Forum Diskusi</h2>
-
-          <Link to="/forum">
-            <Button variant="outline" className="flex items-center gap-2 border-[#1E40AF] text-[#1E40AF]">
-              Lihat Semua <ChevronRight size={18} />
-            </Button>
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
-          {[1, 2].map((f) => (
-            <Card className="rounded-2xl shadow-md" key={f}>
-              <CardHeader>
-                <CardTitle className="text-xl">
-                  Diskusi Rohani #{f}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-gray-600">
-                Topik diskusi untuk memperdalam pemahaman rohani dan saling menguatkan.
-              </CardContent>
-
-              <div className="px-6 pb-6">
-                <Link to={`/forum/${f}`}>
-                  <Button className="w-full bg-[#1E40AF] hover:bg-[#1E3A8A] text-white">
-                    Buka Diskusi
-                  </Button>
-                </Link>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* ================= FOOTER ================= */}
-      <footer className="bg-[#1E40AF] text-white py-10 px-6 mt-10">
-        <div className="max-w-6xl mx-auto text-center">
-          <p className="text-lg font-semibold">SKK Community</p>
-          <p className="text-blue-200">© 2025 - Semua hak dilindungi.</p>
-        </div>
-      </footer>
-    </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <Footer />
+    </>
   );
 }
-
