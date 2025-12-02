@@ -8,7 +8,7 @@ export default function LandingPage() {
   return (
     <div className="w-full min-h-screen bg-white text-[#111827]">
       {/* ================= HERO SECTION ================= */}
-      <section className="w-full bg-gradient-to-r from-[#1E40AF] to-[#3B82F6] text-white py-24 px-6">
+      <section className="w-full bg-linear-to-r from-[#1E40AF] to-[#3B82F6] text-white py-24 px-6">
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-10">
           <div className="flex-1">
             <h1 className="text-4xl lg:text-6xl font-bold leading-tight">
