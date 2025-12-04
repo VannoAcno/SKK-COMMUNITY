@@ -1,4 +1,4 @@
-// resources/js/pages/profile/EditProfilePage.jsx
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,14 +20,14 @@ import {
   CommandGroup,
   CommandItem,
 } from '@/components/ui/command';
-import { Popovar, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar, Mail, Phone, MapPin, User, School } from 'lucide-react';
 import { Check, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import NavbarAfter from '@/components/shared/NavbarAfter';
 import Footer from '@/components/shared/Footer';
 
-// ✅ Perbaiki: gunakan hex color (bukan 'white')
+
 const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?name=SKK&background=FACC15&color=ffffff&size=128';
 
 export default function EditProfilePage() {
@@ -52,7 +52,7 @@ export default function EditProfilePage() {
   const [openSchool, setOpenSchool] = useState(false);
   const [openMajor, setOpenMajor] = useState(false);
 
-  // Daftar sekolah & jurusan
+  
   const schools = [
     'SMAK 1 PENABUR Surabaya',
     'SMAK 2 PENABUR Surabaya',
@@ -257,12 +257,16 @@ export default function EditProfilePage() {
         apiData.append('avatar', avatarFile);
       }
 
-      // ✅ Perubahan utama: HAPUS Authorization header, tambahkan credentials
-      const res = await fetch('/api/profile', {
-        method: 'POST',
-        credentials: 'include', // ✅ Kirim cookie session
-        body: apiData,
-      });
+      const token = localStorage.getItem('auth_token');
+
+const res = await fetch('/api/profile', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    
+  },
+  body: apiData,
+});
 
       const result = await res.json();
       if (!res.ok) throw new Error(result.message || 'Gagal memperbarui profil');

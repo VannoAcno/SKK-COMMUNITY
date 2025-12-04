@@ -33,8 +33,8 @@ class ProfileController extends Controller
 
         // Upload avatar baru (jika ada file)
         if ($request->hasFile('avatar')) {
-            $cloudName = env('CLOUDINARY_CLOUD_NAME');
-            $uploadPreset = env('CLOUDINARY_UPLOAD_PRESET');
+            $cloudName = env('VITE_CLOUDINARY_CLOUD_NAME');
+            $uploadPreset = env('VITE_CLOUDINARY_UPLOAD_PRESET');
 
             $file = $request->file('avatar');
             $fileName = $file->getClientOriginalName();
@@ -91,14 +91,13 @@ class ProfileController extends Controller
                 $publicId = implode('/', array_slice($parts, $uploadIndex + 2));
                 $publicId = preg_replace('/\.[^.]*$/', '', $publicId);
 
-                $cloudName = env('CLOUDINARY_CLOUD_NAME');
+                $cloudName = env('VITE_CLOUDINARY_CLOUD_NAME');
                 $apiKey = env('CLOUDINARY_API_KEY');
                 $apiSecret = env('CLOUDINARY_API_SECRET');
                 $timestamp = time();
 
                 $signature = sha1("public_id={$publicId}&timestamp={$timestamp}{$apiSecret}");
 
-                // ✅ Perbaiki: hapus spasi di URL
                 $response = Http::asForm()->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/destroy", [
                     'public_id' => $publicId,
                     'signature' => $signature,
