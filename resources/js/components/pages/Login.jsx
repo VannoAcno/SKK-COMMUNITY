@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 
+// ✅ API Base URL
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,14 +20,30 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     try {
-      // TODO: Panggil API login Laravel Sanctum
-      console.log('Login dengan:', { email, password });
-      // Jika sukses → navigate('/dashboard')
-      // Untuk demo sementara:
-      alert('Login berhasil! (Demo)');
-      navigate('/dashboard');
+      // ✅ Kirim ke API Laravel
+      const response = await fetch(`${API_BASE}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Email atau password salah');
+      }
+
+      // ✅ Simpan token & user ke localStorage
+      localStorage.setItem('auth_token', result.access_token);
+      localStorage.setItem('user', JSON.stringify(result.user));
+
+      // ✅ Redirect ke halaman utama
+      navigate('/home');
     } catch (err) {
-      alert('Login gagal. Cek email dan password.');
+      console.error('Login error:', err);
+      alert('Login gagal: ' + err.message);
     } finally {
       setLoading(false);
     }

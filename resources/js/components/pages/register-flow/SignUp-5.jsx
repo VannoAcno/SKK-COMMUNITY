@@ -10,23 +10,24 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 
+// ✅ API Client
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+
 export default function SignUp5() {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Ambil data dari localStorage
     const step1 = JSON.parse(localStorage.getItem('registerStep1') || '{}');
     const step2 = JSON.parse(localStorage.getItem('registerStep2') || '{}');
     const step3 = JSON.parse(localStorage.getItem('registerStep3') || '{}');
     const step4 = JSON.parse(localStorage.getItem('registerStep4') || '{}');
 
-    // Gabungkan semua data
     const fullData = { ...step1, ...step2, ...step3, ...step4 };
     
-    // Validasi: pastikan Step 1 ada
     if (!fullData.fullName) {
-      navigate('/register/step-1'); // Redirect jika data tidak lengkap
+      navigate('/register/step-1');
       return;
     }
 
@@ -37,19 +38,54 @@ export default function SignUp5() {
     navigate(`/register/step-${step}`);
   };
 
-  const handleConfirm = () => {
-    // TODO: Kirim data ke Laravel API
-    console.log('Data lengkap untuk submit:', data);
-    alert('Pendaftaran berhasil! (Demo)');
+  // ✅ Kirim data ke Laravel
+  const handleConfirm = async () => {
+    if (!data) return;
 
-    // Hapus data localStorage setelah submit
-    localStorage.removeItem('registerStep1');
-    localStorage.removeItem('registerStep2');
-    localStorage.removeItem('registerStep3');
-    localStorage.removeItem('registerStep4');
+    setLoading(true);
+    try {
+      const userData = {
+        full_name: data.fullName,
+        gender: data.gender,
+        birth_date: data.birthDate,
+        school: data.school,
+        grade: data.grade,
+        major: data.major || null,
+        email: data.email,
+        phone: data.phone,
+        address: data.address || null,
+        password: data.password,
+        password_confirmation: data.confirmPassword,
+      };
 
-    // Redirect ke login atau dashboard
-    navigate('/login');
+      const response = await fetch(`${API_BASE}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Gagal mendaftar');
+      }
+
+      // Hapus data localStorage
+      localStorage.removeItem('registerStep1');
+      localStorage.removeItem('registerStep2');
+      localStorage.removeItem('registerStep3');
+      localStorage.removeItem('registerStep4');
+
+      alert('Pendaftaran berhasil! Silakan login.');
+      navigate('/login');
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Gagal mendaftar: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!data) {
@@ -171,9 +207,10 @@ export default function SignUp5() {
             <Button
               type="button"
               onClick={handleConfirm}
+              disabled={loading}
               className="flex-1 bg-[#FACC15] text-black hover:bg-[#EAB308] font-semibold"
             >
-              Selesaikan Pendaftaran
+              {loading ? 'Mengirim...' : 'Selesaikan Pendaftaran'}
             </Button>
           </div>
         </CardContent>
