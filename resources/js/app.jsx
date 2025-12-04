@@ -23,8 +23,9 @@ import Galeri from './components/pages/Galeri';
 import Donasi from './components/pages/Donasi';
 import Forum from './components/pages/Forum';
 import KritikSaran from './components/pages/KritikSaran';
-import Profil from './components/pages/Profile';
+import Profile from './components/pages/Profile';
 import DonasiDetail from './components/pages/donasi-flow/DonasiDetail';
+import EditProfil from './components/pages/profile-flow/EditProfile';
 
 console.log("✅ LandingPage imported, mounting React...");
 
@@ -59,7 +60,8 @@ ReactDOM.createRoot(document.getElementById('app')).render(
         <Route path="/donasi/:id" element={<ProtectedRoute><DonasiDetail /></ProtectedRoute>} />
         <Route path="/forum" element={<ProtectedRoute><Forum /></ProtectedRoute>} />
         <Route path="/kritik-saran" element={<ProtectedRoute><KritikSaran /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><Profil /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/profile/edit" element={<ProtectedRoute><EditProfil /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

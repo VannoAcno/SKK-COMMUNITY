@@ -9,10 +9,13 @@ import Footer from '../shared/Footer';
 
 export default function Home() {
   const navigate = useNavigate();
+  
+  // ✅ Ambil data user dari localStorage
+  const userData = JSON.parse(localStorage.getItem('user') || '{}');
   const user = {
-    fullName: 'Budi Santoso',
-    school: 'SMAK 1 PENABUR Surabaya',
-    grade: 'XI',
+    fullName: userData.full_name || 'Anggota',
+    school: userData.school || 'Sekolah tidak diketahui',
+    grade: userData.grade || '-',
   };
 
   const shortcuts = [

@@ -41,9 +41,13 @@ class AuthController extends Controller
             'grade', 'major', 'email', 'phone', 'address', 'password'
         ]));
 
+        // ✅ Kembalikan SEMUA data yang dibutuhkan
         return response()->json([
             'message' => 'Pendaftaran berhasil! Silakan login.',
-            'user' => $user->only('id', 'full_name', 'email', 'school', 'grade')
+            'user' => $user->only([
+                'id', 'full_name', 'gender', 'birth_date', 'school',
+                'grade', 'major', 'email', 'phone', 'address'
+            ])
         ], 201);
     }
 
@@ -76,11 +80,15 @@ class AuthController extends Controller
         $user = Auth::user();
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        // ✅ Kembalikan SEMUA data yang dibutuhkan
         return response()->json([
             'message' => 'Login berhasil.',
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'user' => $user->only('id', 'full_name', 'email', 'school', 'grade')
+            'user' => $user->only([
+                'id', 'full_name', 'gender', 'birth_date', 'school',
+                'grade', 'major', 'email', 'phone', 'address'
+            ])
         ]);
     }
 

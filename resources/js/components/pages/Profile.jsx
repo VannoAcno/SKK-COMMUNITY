@@ -7,18 +7,25 @@ import { Link } from 'react-router-dom';
 import NavbarAfter from '@/components/shared/NavbarAfter';
 import Footer from '@/components/shared/Footer';
 
-export default function Profil() {
-  // TODO: Ambil dari API atau context
+// Gambar default jika user belum upload foto
+const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?name=SKK&background=FACC15&color=white&size=128';
+
+export default function Profile() {
+  const userData = JSON.parse(localStorage.getItem('user') || '{}');
+
   const user = {
-    fullName: 'Budi Santoso',
-    gender: 'Laki-laki',
-    birthDate: '15 Mei 2007',
-    school: 'SMAK 1 PENABUR Surabaya',
-    grade: 'XI',
-    major: 'IPA',
-    email: 'budi.santoso@smak1.sch.id',
-    phone: '0812-3456-7890',
-    address: 'Jl. Contoh No. 123, Surabaya',
+    fullName: userData.full_name || 'Nama tidak tersedia',
+    gender: userData.gender === 'L' ? 'Laki-laki' : userData.gender === 'P' ? 'Perempuan' : 'Tidak diketahui',
+    birthDate: userData.birth_date
+      ? new Date(userData.birth_date).toLocaleDateString('id-ID')
+      : 'Tanggal lahir tidak tersedia',
+    school: userData.school || 'Sekolah tidak diketahui',
+    grade: userData.grade || 'Kelas tidak diketahui',
+    major: userData.major || 'Jurusan tidak diketahui',
+    email: userData.email || 'Email tidak tersedia',
+    phone: userData.phone || 'Nomor HP tidak tersedia',
+    address: userData.address || 'Alamat tidak tersedia',
+    avatar: userData.avatar || DEFAULT_AVATAR, // ✅ URL foto profil
   };
 
   return (
@@ -26,14 +33,33 @@ export default function Profil() {
       <NavbarAfter />
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-[#374151]">Profil Saya</h1>
+          {/* ✅ Foto Profil Bulat di Tengah Atas */}
+          <div className="flex flex-col items-center mb-8">
+            <div className="w-24 h-24 rounded-full bg-[#FACC15] flex items-center justify-center border-4 border-white shadow-lg">
+              {user.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt="Foto Profil"
+                  className="w-full h-full object-cover rounded-full"
+                  onError={(e) => {
+                    e.target.src = DEFAULT_AVATAR;
+                  }}
+                />
+              ) : (
+                <User size={48} className="text-white" />
+              )}
+            </div>
+            <h1 className="text-2xl font-bold text-[#374151] mt-4">{user.fullName}</h1>
+            <p className="text-[#6B7280]">{user.school} • Kelas {user.grade}</p>
+          </div>
+
+          <div className="flex justify-end mb-6">
             <Button
               variant="outline"
               asChild
               className="border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3]"
             >
-              <Link to="/profil/edit">
+              <Link to="/profile/edit">
                 <Edit size={16} className="mr-1" />
                 Edit Profil
               </Link>
