@@ -46,7 +46,7 @@ class AuthController extends Controller
             'message' => 'Pendaftaran berhasil! Silakan login.',
             'user' => $user->only([
                 'id', 'full_name', 'gender', 'birth_date', 'school',
-                'grade', 'major', 'email', 'phone', 'address'
+                'grade', 'major', 'email', 'phone', 'address', 'avatar'
             ])
         ], 201);
     }
@@ -87,7 +87,7 @@ class AuthController extends Controller
             'token_type' => 'Bearer',
             'user' => $user->only([
                 'id', 'full_name', 'gender', 'birth_date', 'school',
-                'grade', 'major', 'email', 'phone', 'address'
+                'grade', 'major', 'email', 'phone', 'address', 'avatar'
             ])
         ]);
     }
