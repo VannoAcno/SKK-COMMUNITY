@@ -153,7 +153,7 @@ export default function Profile() {
                   asChild
                   className="w-full justify-start border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3]"
                 >
-                  <Link to="/profil/ganti-password">
+                  <Link to="/profile/ganti-password">
                     <Key size={16} className="mr-2" />
                     Ganti Password
                   </Link>

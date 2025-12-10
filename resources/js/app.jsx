@@ -25,7 +25,14 @@ import Forum from './components/pages/Forum';
 import KritikSaran from './components/pages/KritikSaran';
 import Profile from './components/pages/Profile';
 import DonasiDetail from './components/pages/donasi-flow/DonasiDetail';
-import EditProfil from './components/pages/profile-flow/EditProfile';
+import EditProfile from './components/pages/profile-flow/EditProfile';
+import GantiPassword from './components/pages/profile-flow/GantiPassword';
+import DashboardAdmin from './components/admin-pages/DashboardAdmin';
+import KegiatanAdmin from './components/admin-pages/Kegiatan/KegiatanAdmin';
+import DonasiAdmin from './components/admin-pages/Donasi/DonasiAdmin';
+import EditAdminProfile from './components/admin-pages/EditAdminProfile';
+import ForumAdmin from './components/admin-pages/Forum/ForumAdmin';
+import GaleriAdmin from './components/admin-pages/Galeri/GaleriAdmin';
 
 console.log("✅ LandingPage imported, mounting React...");
 
@@ -61,7 +68,14 @@ ReactDOM.createRoot(document.getElementById('app')).render(
         <Route path="/forum" element={<ProtectedRoute><Forum /></ProtectedRoute>} />
         <Route path="/kritik-saran" element={<ProtectedRoute><KritikSaran /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/profile/edit" element={<ProtectedRoute><EditProfil /></ProtectedRoute>} />
+        <Route path="/profile/edit" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
+        <Route path="/profile/ganti-password" element={<ProtectedRoute><GantiPassword /></ProtectedRoute>} />
+        <Route path="/admin/dashboard" element={<ProtectedRoute><DashboardAdmin /></ProtectedRoute>} />
+        <Route path="/admin/kegiatan" element={<ProtectedRoute><KegiatanAdmin /></ProtectedRoute>} />
+        <Route path="/admin/donasi" element={<ProtectedRoute><DonasiAdmin /></ProtectedRoute>} />
+        <Route path="/admin/galeri" element={<ProtectedRoute><GaleriAdmin /></ProtectedRoute>} />
+        <Route path="/admin/forum" element={<ProtectedRoute><ForumAdmin /></ProtectedRoute>} />
+        <Route path="/admin/profile/edit" element={<ProtectedRoute><EditAdminProfile /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

@@ -33,13 +33,13 @@ class ProfileController extends Controller
 
         // Upload avatar baru (jika ada file)
         if ($request->hasFile('avatar')) {
-            $cloudName = env('VITE_CLOUDINARY_CLOUD_NAME');
-            $uploadPreset = env('VITE_CLOUDINARY_UPLOAD_PRESET');
+            $cloudName = env('CLOUDINARY_CLOUD_NAME');
+            $uploadPreset = env('CLOUDINARY_UPLOAD_PRESET');
 
             $file = $request->file('avatar');
             $fileName = $file->getClientOriginalName();
 
-            // ✅ Perbaiki: hapus spasi di URL
+            // ✅ HAPUS SPASI di URL
             $response = Http::attach(
                 'file', file_get_contents($file->getRealPath()), $fileName
             )->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/upload", [
@@ -49,7 +49,8 @@ class ProfileController extends Controller
             $data = $response->json();
 
             if (!$response->successful()) {
-                return response()->json(['message' => 'Gagal upload avatar'], 500);
+                Log::error('Cloudinary upload failed', $data);
+                return response()->json(['message' => 'Gagal upload avatar ke Cloudinary'], 500);
             }
 
             // Hapus avatar lama
@@ -70,14 +71,11 @@ class ProfileController extends Controller
             'message' => 'Profil berhasil diperbarui',
             'user' => $user->only([
                 'id', 'full_name', 'gender', 'birth_date', 'school',
-                'grade', 'major', 'email', 'phone', 'address', 'avatar'
+                'grade', 'major', 'email', 'phone', 'address', 'avatar', 'is_admin'
             ])
         ]);
     }
 
-    /**
-     * Hapus avatar lama dari Cloudinary (ekstrak public_id dari URL)
-     */
     private function deleteOldAvatarFromCloudinary($avatarUrl)
     {
         try {
@@ -91,13 +89,14 @@ class ProfileController extends Controller
                 $publicId = implode('/', array_slice($parts, $uploadIndex + 2));
                 $publicId = preg_replace('/\.[^.]*$/', '', $publicId);
 
-                $cloudName = env('VITE_CLOUDINARY_CLOUD_NAME');
+                $cloudName = env('CLOUDINARY_CLOUD_NAME');
                 $apiKey = env('CLOUDINARY_API_KEY');
                 $apiSecret = env('CLOUDINARY_API_SECRET');
                 $timestamp = time();
 
                 $signature = sha1("public_id={$publicId}&timestamp={$timestamp}{$apiSecret}");
 
+                // ✅ HAPUS SPASI di URL
                 $response = Http::asForm()->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/destroy", [
                     'public_id' => $publicId,
                     'signature' => $signature,

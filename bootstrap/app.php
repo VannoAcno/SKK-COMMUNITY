@@ -17,6 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // ✅ Aktifkan Sanctum untuk SPA
         $middleware->statefulApi();
+
+        // admin login
+        $middleware->alias([
+        'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+    ]);
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

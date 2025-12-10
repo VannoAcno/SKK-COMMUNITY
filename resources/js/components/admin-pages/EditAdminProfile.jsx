@@ -23,12 +23,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar, Mail, Phone, MapPin, User, School } from 'lucide-react';
 import { Check, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import NavbarAfter from '@/components/shared/NavbarAfter';
 import Footer from '@/components/shared/Footer';
 
 const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?name=SKK&background=FACC15&color=ffffff&size=128';
 
-export default function EditProfile() {
+export default function EditAdminProfile() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState(DEFAULT_AVATAR);
@@ -285,7 +284,7 @@ export default function EditProfile() {
 
       localStorage.setItem('user', JSON.stringify(result.user));
       alert('Profile berhasil diperbarui!');
-      navigate('/profile');
+      navigate('/admin/dashboard');
     } catch (err) {
       alert('Gagal: ' + err.message);
     } finally {
@@ -295,7 +294,6 @@ export default function EditProfile() {
 
   return (
     <>
-      <NavbarAfter />
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
           <Card className="max-w-4xl mx-auto border-0">
@@ -594,7 +592,7 @@ export default function EditProfile() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => navigate('/profile')}
+                    onClick={() => navigate('/admin/dashboard')}
                     className="border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3]"
                   >
                     Batal

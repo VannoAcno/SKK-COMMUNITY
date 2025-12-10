@@ -12,9 +12,6 @@ class AuthController extends Controller
 {
     /**
      * Register a new user.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
      */
     public function register(Request $request)
     {
@@ -41,21 +38,17 @@ class AuthController extends Controller
             'grade', 'major', 'email', 'phone', 'address', 'password'
         ]));
 
-        // ✅ Kembalikan SEMUA data yang dibutuhkan
         return response()->json([
             'message' => 'Pendaftaran berhasil! Silakan login.',
             'user' => $user->only([
                 'id', 'full_name', 'gender', 'birth_date', 'school',
-                'grade', 'major', 'email', 'phone', 'address', 'avatar'
+                'grade', 'major', 'email', 'phone', 'address', 'avatar', 'is_admin'
             ])
         ], 201);
     }
 
     /**
      * Login user and create token.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
      */
     public function login(Request $request)
     {
@@ -80,23 +73,20 @@ class AuthController extends Controller
         $user = Auth::user();
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        // ✅ Kembalikan SEMUA data yang dibutuhkan
+        // ✅ Kembalikan SEMUA data termasuk is_admin
         return response()->json([
             'message' => 'Login berhasil.',
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user' => $user->only([
                 'id', 'full_name', 'gender', 'birth_date', 'school',
-                'grade', 'major', 'email', 'phone', 'address', 'avatar'
+                'grade', 'major', 'email', 'phone', 'address', 'avatar', 'is_admin'
             ])
         ]);
     }
 
     /**
      * Logout user (revoke token).
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
      */
     public function logout(Request $request)
     {

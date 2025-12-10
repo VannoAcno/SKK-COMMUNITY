@@ -63,7 +63,7 @@ export default function Home() {
             <h2 className="text-2xl font-bold text-[#374151] mb-2">
               Halo, {user.fullName}!
             </h2>
-            <p className="text-[#374151] opacity-90">
+            <p className="text-[#374151]">
               Selamat datang di dashboard SKK Community.
             </p>
             <p className="text-[#374151] font-medium mt-1">
