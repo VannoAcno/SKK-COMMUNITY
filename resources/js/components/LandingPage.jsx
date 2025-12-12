@@ -1,9 +1,20 @@
+// resources/js/pages/LandingPage.jsx
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import NavbarBefore from './shared/NavbarBefore';
 import Footer from './shared/Footer';
+import { Heart, Calendar } from 'lucide-react';
+
+// ✅ Data renungan dummy (nanti diganti dari API)
+const renunganDummy = {
+  tanggal: new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+  ayat: 'Yeremia 29:11',
+  teks: 'Sebab Aku ini mengetahui rancangan-rancangan apa yang ada pada-Ku mengenai kamu, demikianlah firman TUHAN, yaitu rancangan damai sejahtera dan bukan rancangan kecelakaan, untuk memberikan kepadamu hari depan yang penuh harapan.',
+  refleksi: 'Tuhan memiliki rencana indah untuk hidup kita. Walaupun saat ini kita menghadapi tantangan, kita bisa tenang karena Ia selalu menyertai kita.',
+  kategori: 'Harapan',
+};
 
 export default function LandingPage() {
   const schools = [
@@ -128,6 +139,38 @@ export default function LandingPage() {
                   Lihat semua kegiatan →
                 </Link>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ✅ RENUNGAN HARIAN — di bawah kegiatan */}
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center text-[#374151] mb-8">Renungan Harian</h2>
+            <div className="max-w-3xl mx-auto">
+              <Card className="border-0 shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-full bg-[#FACC15] flex items-center justify-center flex-shrink-0">
+                      <Heart size={24} className="text-white" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-2 text-sm text-[#6B7280]">
+                        <Calendar size={16} />
+                        {renunganDummy.tanggal}
+                      </div>
+                      <h3 className="font-bold text-lg text-[#374151]">{renunganDummy.ayat}</h3>
+                      <p className="text-[#374151] mt-2 italic">"{renunganDummy.teks}"</p>
+                      <p className="text-[#6B7280] mt-3">{renunganDummy.refleksi}</p>
+                      <div className="mt-3">
+                        <span className="inline-block bg-[#FEF9C3] text-[#374151] text-xs px-2 py-1 rounded-full">
+                          #{renunganDummy.kategori}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>

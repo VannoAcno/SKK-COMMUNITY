@@ -33,6 +33,7 @@ import DonasiAdmin from './components/admin-pages/Donasi/DonasiAdmin';
 import EditAdminProfile from './components/admin-pages/EditAdminProfile';
 import ForumAdmin from './components/admin-pages/Forum/ForumAdmin';
 import GaleriAdmin from './components/admin-pages/Galeri/GaleriAdmin';
+import RenunganAdmin from './components/admin-pages/Renungan/RenunganAdmin';
 
 console.log("✅ LandingPage imported, mounting React...");
 
@@ -73,6 +74,7 @@ ReactDOM.createRoot(document.getElementById('app')).render(
         <Route path="/admin/dashboard" element={<ProtectedRoute><DashboardAdmin /></ProtectedRoute>} />
         <Route path="/admin/kegiatan" element={<ProtectedRoute><KegiatanAdmin /></ProtectedRoute>} />
         <Route path="/admin/donasi" element={<ProtectedRoute><DonasiAdmin /></ProtectedRoute>} />
+        <Route path="/admin/renungan" element={<ProtectedRoute><RenunganAdmin /></ProtectedRoute>} />
         <Route path="/admin/galeri" element={<ProtectedRoute><GaleriAdmin /></ProtectedRoute>} />
         <Route path="/admin/forum" element={<ProtectedRoute><ForumAdmin /></ProtectedRoute>} />
         <Route path="/admin/profile/edit" element={<ProtectedRoute><EditAdminProfile /></ProtectedRoute>} />

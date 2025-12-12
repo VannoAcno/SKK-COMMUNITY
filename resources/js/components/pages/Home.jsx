@@ -7,6 +7,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import NavbarAfter from '@/components/shared/NavbarAfter';
 import Footer from '../shared/Footer';
 
+// ✅ Data renungan dummy (nanti dari API)
+const renunganDummy = {
+  tanggal: new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+  ayat: 'Yeremia 29:11',
+  teks: 'Sebab Aku ini mengetahui rancangan-rancangan apa yang ada pada-Ku mengenai kamu...',
+  refleksi: 'Tuhan memiliki rencana indah untuk hidup kita...',
+  kategori: 'Harapan',
+};
+
 export default function Home() {
   const navigate = useNavigate();
   
@@ -71,6 +80,38 @@ export default function Home() {
             </p>
           </div>
 
+          {/* ✅ RENUNGAN HARIAN — Panjang, mengisi 3 kolom */}
+          <div className="mb-8">
+            <Card className="border-0 shadow">
+              <CardHeader>
+                <CardTitle className="text-[#374151] flex items-center gap-2">
+                  <Heart size={18} />
+                  Renungan Hari Ini
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-full bg-[#FACC15] flex items-center justify-center flex-shrink-0">
+                    <Heart size={20} className="text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm text-[#6B7280] mb-1">
+                      {renunganDummy.tanggal}
+                    </div>
+                    <h3 className="font-bold text-lg text-[#374151]">{renunganDummy.ayat}</h3>
+                    <p className="text-[#374151] mt-2 italic">"{renunganDummy.teks}"</p>
+                    <p className="text-[#6B7280] mt-3">{renunganDummy.refleksi}</p>
+                    <div className="mt-3">
+                      <span className="inline-block bg-[#FEF9C3] text-[#374151] text-xs px-2 py-1 rounded-full">
+                        #{renunganDummy.kategori}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Akses Cepat */}
           <h3 className="text-xl font-bold text-[#374151] mb-4">Akses Cepat</h3>
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -94,7 +135,7 @@ export default function Home() {
             })}
           </div>
 
-          {/* Info Tambahan */}
+          {/* Info Tambahan (Agenda, Donasi, Galeri) — Tetap di bawah */}
           <div className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Agenda Terdekat */}
             <Card className="border-0 shadow">
@@ -137,7 +178,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            {/* 🎨 Galeri Terbaru */}
+            {/* Galeri Terbaru */}
             <Card className="border-0 shadow">
               <CardHeader>
                 <CardTitle className="text-[#374151]">Galeri Terbaru</CardTitle>
