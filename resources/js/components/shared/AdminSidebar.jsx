@@ -9,11 +9,11 @@ import { useNavigate } from 'react-router-dom';
 
 const navItems = [
   { name: 'Dashboard', icon: BarChart3, path: '/admin/dashboard' },
-  { name: 'Kegiatan', icon: Calendar, path: '/admin/kegiatan' },
-  { name: 'Donasi', icon: Heart, path: '/admin/donasi' },
-  { name: 'Galeri', icon: Heart, path: '/admin/galeri' },
-  { name: 'Forum', icon: MessageCircle, path: '/admin/forum' },
-  { name: 'Renungan', icon: Heart, path: '/admin/renungan' },
+  { name: 'Kegiatan', icon: Calendar, path: '/admin/kegiatans' }, // ✅ Perbaiki: /admin/kegiatans
+  { name: 'Donasi', icon: Heart, path: '/admin/donasis' },
+  { name: 'Galeri', icon: Heart, path: '/admin/galeris' },
+  { name: 'Forum', icon: MessageCircle, path: '/admin/forums' },
+  { name: 'Renungan', icon: Heart, path: '/admin/renungans' },
 ];
 
 export default function AdminSidebar({ admin }) {
@@ -44,7 +44,7 @@ export default function AdminSidebar({ admin }) {
       <CardContent className="p-4 space-y-2">
         {/* Profil Admin → Link ke Edit Profile */}
         {admin && (
-          <Link to="/admin/profile/edit" className="block">
+          <Link to="/admin/profile/edit" className="block"> {/* ✅ Perbaiki: /admin/profile/edit */}
             <div className="flex items-center gap-3 p-2 bg-[#FEF9C3]/50 rounded-md mb-4 hover:bg-[#FEF9C3] transition-colors">
               <div className="w-10 h-10 rounded-full bg-[#FACC15] flex items-center justify-center overflow-hidden">
                 {admin.avatar ? (
@@ -53,7 +53,7 @@ export default function AdminSidebar({ admin }) {
                     alt="Avatar"
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(admin.full_name || 'A') + '&background=FACC15&color=ffffff&size=32';
+                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(admin.full_name || 'A')}&background=FACC15&color=ffffff&size=32`;
                     }}
                   />
                 ) : (
@@ -89,10 +89,10 @@ export default function AdminSidebar({ admin }) {
           );
         })}
 
-        {/* Tombol Logout — ✅ Sudah Diperbaiki */}
+        {/* Tombol Logout */}
         <Button
+          variant="outline"
           onClick={handleLogout}
-          variant="outline"  // ✅ Tambahkan ini agar sama dengan tombol lain
           className="w-full justify-start border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3] mt-8 flex items-center gap-3"
         >
           <LogOut size={18} />

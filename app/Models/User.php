@@ -49,4 +49,12 @@ class User extends Authenticatable
         'birth_date' => 'date',
         'password' => 'hashed',
     ];
+
+    /**
+     * Relasi: User bisa mendaftar ke banyak kegiatan.
+     */
+    public function kegiatans()
+    {
+        return $this->belongsToMany(Kegiatan::class, 'peserta_kegiatan', 'user_id', 'kegiatan_id');
+    }
 }

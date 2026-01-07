@@ -39,11 +39,12 @@ class ProfileController extends Controller
             $file = $request->file('avatar');
             $fileName = $file->getClientOriginalName();
 
-            // ✅ HAPUS SPASI di URL
+            // ✅ Tambahkan folder 'profile-user' di sini
             $response = Http::attach(
                 'file', file_get_contents($file->getRealPath()), $fileName
             )->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/upload", [
                 'upload_preset' => $uploadPreset,
+                'folder' => 'profile-user', // ✅ Ini yang menentukan folder
             ]);
 
             $data = $response->json();
@@ -53,7 +54,7 @@ class ProfileController extends Controller
                 return response()->json(['message' => 'Gagal upload avatar ke Cloudinary'], 500);
             }
 
-            // Hapus avatar lama
+            // Hapus avatar lama (jika ada)
             if ($user->avatar) {
                 $this->deleteOldAvatarFromCloudinary($user->avatar);
             }
@@ -76,6 +77,9 @@ class ProfileController extends Controller
         ]);
     }
 
+    /**
+     * Hapus avatar lama dari Cloudinary
+     */
     private function deleteOldAvatarFromCloudinary($avatarUrl)
     {
         try {
@@ -96,7 +100,7 @@ class ProfileController extends Controller
 
                 $signature = sha1("public_id={$publicId}&timestamp={$timestamp}{$apiSecret}");
 
-                // ✅ HAPUS SPASI di URL
+                // ✅ HAPUS SPASI di URL (sudah benar sekarang)
                 $response = Http::asForm()->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/destroy", [
                     'public_id' => $publicId,
                     'signature' => $signature,
@@ -104,11 +108,15 @@ class ProfileController extends Controller
                     'timestamp' => $timestamp,
                 ]);
 
-                Log::info('Deleted old avatar', ['public_id' => $publicId, 'success' => $response->successful()]);
+                Log::info('Deleted old avatar from Cloudinary', [
+                    'public_id' => $publicId,
+                    'success' => $response->successful()
+                ]);
+
                 return $response->successful();
             }
         } catch (\Exception $e) {
-            Log::error('Failed to delete avatar: ' . $e->getMessage());
+            Log::error('Failed to delete avatar from Cloudinary: ' . $e->getMessage());
         }
         return false;
     }

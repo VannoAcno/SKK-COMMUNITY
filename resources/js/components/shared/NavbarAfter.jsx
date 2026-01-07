@@ -153,7 +153,7 @@ export default function NavbarAfter() {
           <PopoverContent className="w-56 p-0" align="end">
             <div className="p-2">
               <div className="flex items-center gap-3 p-2">
-                <div className="w-10 h-10 rounded-full overflow-hidden">
+                <div className="w-12 h-10 rounded-full overflow-hidden">
                   <img
                     src={avatar}
                     alt="Profil"

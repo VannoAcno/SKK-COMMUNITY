@@ -19,6 +19,7 @@ import SignUp4 from './components/pages/register-flow/SignUp-4';
 import SignUp5 from './components/pages/register-flow/SignUp-5';
 import Home from './components/pages/Home';
 import Kegiatan from './components/pages/Kegiatan';
+import KegiatanDetail from './components/pages/kegiatan-flow/KegiatanDetail';
 import Galeri from './components/pages/Galeri';
 import Donasi from './components/pages/Donasi';
 import Forum from './components/pages/Forum';
@@ -29,11 +30,16 @@ import EditProfile from './components/pages/profile-flow/EditProfile';
 import GantiPassword from './components/pages/profile-flow/GantiPassword';
 import DashboardAdmin from './components/admin-pages/DashboardAdmin';
 import KegiatanAdmin from './components/admin-pages/Kegiatan/KegiatanAdmin';
+import TambahKegiatan from './components/admin-pages/Kegiatan/TambahKegiatan';
+import EditKegiatan from './components/admin-pages/Kegiatan/EditKegiatan';
 import DonasiAdmin from './components/admin-pages/Donasi/DonasiAdmin';
 import EditAdminProfile from './components/admin-pages/EditAdminProfile';
 import ForumAdmin from './components/admin-pages/Forum/ForumAdmin';
 import GaleriAdmin from './components/admin-pages/Galeri/GaleriAdmin';
 import RenunganAdmin from './components/admin-pages/Renungan/RenunganAdmin';
+import DaftarPesertaKegiatan from './components/admin-pages/Kegiatan/DaftarPesertaKegiatan';
+
+
 
 console.log("✅ LandingPage imported, mounting React...");
 
@@ -63,6 +69,7 @@ ReactDOM.createRoot(document.getElementById('app')).render(
         {/* Rute Terlindungi — dibungkus dengan Protected */}
         <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/kegiatan" element={<ProtectedRoute><Kegiatan /></ProtectedRoute>} />
+        <Route path="/kegiatan/:id" element={<ProtectedRoute><KegiatanDetail /></ProtectedRoute>} />
         <Route path="/galeri" element={<ProtectedRoute><Galeri /></ProtectedRoute>} />
         <Route path="/donasi" element={<ProtectedRoute><Donasi /></ProtectedRoute>} />
         <Route path="/donasi/:id" element={<ProtectedRoute><DonasiDetail /></ProtectedRoute>} />
@@ -72,7 +79,10 @@ ReactDOM.createRoot(document.getElementById('app')).render(
         <Route path="/profile/edit" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
         <Route path="/profile/ganti-password" element={<ProtectedRoute><GantiPassword /></ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<ProtectedRoute><DashboardAdmin /></ProtectedRoute>} />
-        <Route path="/admin/kegiatan" element={<ProtectedRoute><KegiatanAdmin /></ProtectedRoute>} />
+        <Route path="/admin/kegiatans" element={<ProtectedRoute><KegiatanAdmin /></ProtectedRoute>} />
+        <Route path="/admin/kegiatans/:id/peserta" element={<ProtectedRoute><DaftarPesertaKegiatan /></ProtectedRoute>} />
+        <Route path="/admin/kegiatans/create" element={<ProtectedRoute><TambahKegiatan /></ProtectedRoute>} />
+        <Route path="/admin/kegiatans/:id/edit" element={<ProtectedRoute><EditKegiatan /></ProtectedRoute>} />
         <Route path="/admin/donasi" element={<ProtectedRoute><DonasiAdmin /></ProtectedRoute>} />
         <Route path="/admin/renungan" element={<ProtectedRoute><RenunganAdmin /></ProtectedRoute>} />
         <Route path="/admin/galeri" element={<ProtectedRoute><GaleriAdmin /></ProtectedRoute>} />
@@ -83,4 +93,4 @@ ReactDOM.createRoot(document.getElementById('app')).render(
   </React.StrictMode>
 );
 
-console.log("⚛️ ReactDOM.render called");
+console.log("⚛️ ReactDOM.render called");   

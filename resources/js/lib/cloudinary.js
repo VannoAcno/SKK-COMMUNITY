@@ -1,6 +1,6 @@
 // src/lib/cloudinary.js
-const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+const CLOUD_NAME = import.meta.env._CLOUDINARY_CLOUD_NAME;
+const UPLOAD_PRESET = import.meta.env._CLOUDINARY_UPLOAD_PRESET;
 
 export const uploadImage = async (file) => {
   const formData = new FormData();
