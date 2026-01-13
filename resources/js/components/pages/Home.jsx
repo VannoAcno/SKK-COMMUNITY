@@ -1,5 +1,5 @@
 // resources/js/pages/Home.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Heart, MessageCircle, Calendar, User, Image } from 'lucide-react';
@@ -7,18 +7,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import NavbarAfter from '@/components/shared/NavbarAfter';
 import Footer from '../shared/Footer';
 
-// ✅ Data renungan dummy (nanti dari API)
-const renunganDummy = {
-  tanggal: new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
-  ayat: 'Yeremia 29:11',
-  teks: 'Sebab Aku ini mengetahui rancangan-rancangan apa yang ada pada-Ku mengenai kamu...',
-  refleksi: 'Tuhan memiliki rencana indah untuk hidup kita...',
-  kategori: 'Harapan',
-};
-
 export default function Home() {
   const navigate = useNavigate();
-  
+  const [renungan, setRenungan] = useState(null);
+  const [loading, setLoading] = useState(true);
+
   // ✅ Ambil data user dari localStorage
   const userData = JSON.parse(localStorage.getItem('user') || '{}');
   const user = {
@@ -26,6 +19,31 @@ export default function Home() {
     school: userData.school || 'Sekolah tidak diketahui',
     grade: userData.grade || '-',
   };
+
+  useEffect(() => {
+    const fetchRenunganHarian = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch('/api/renungan-harian', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        setRenungan(data);
+      } catch (err) {
+        console.error('Gagal mengambil renungan harian:', err);
+        // Gunakan data dummy jika gagal
+        setRenungan({
+          tanggal: new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+          judul: 'Yeremia 29:11',
+          isi: 'Sebab Aku ini mengetahui rancangan-rancangan apa yang ada pada-Ku mengenai kamu...',
+          kategori: 'Harapan'
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRenunganHarian();
+  }, []);
 
   const shortcuts = [
     {
@@ -62,6 +80,18 @@ export default function Home() {
     },
   ];
 
+  if (loading) {
+    return (
+      <>
+        <NavbarAfter />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-[#374151]">Memuat renungan harian...</div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
   return (
     <>
       <NavbarAfter />
@@ -80,7 +110,7 @@ export default function Home() {
             </p>
           </div>
 
-          {/* ✅ RENUNGAN HARIAN — Panjang, mengisi 3 kolom */}
+          {/* ✅ RENUNGAN HARIAN — Ambil dari API */}
           <div className="mb-8">
             <Card className="border-0 shadow">
               <CardHeader>
@@ -96,14 +126,13 @@ export default function Home() {
                   </div>
                   <div className="flex-1">
                     <div className="text-sm text-[#6B7280] mb-1">
-                      {renunganDummy.tanggal}
+                      {renungan?.tanggal || 'Tanggal tidak diketahui'}
                     </div>
-                    <h3 className="font-bold text-lg text-[#374151]">{renunganDummy.ayat}</h3>
-                    <p className="text-[#374151] mt-2 italic">"{renunganDummy.teks}"</p>
-                    <p className="text-[#6B7280] mt-3">{renunganDummy.refleksi}</p>
+                    <h3 className="font-bold text-lg text-[#374151]">{renungan?.judul || 'Judul tidak ditemukan'}</h3>
+                    <p className="text-[#374151] mt-2 italic">"{renungan?.isi || 'Tidak ada teks renungan'}"</p>
                     <div className="mt-3">
                       <span className="inline-block bg-[#FEF9C3] text-[#374151] text-xs px-2 py-1 rounded-full">
-                        #{renunganDummy.kategori}
+                        #{renungan?.kategori || 'Umum'}
                       </span>
                     </div>
                   </div>

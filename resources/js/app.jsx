@@ -38,6 +38,8 @@ import ForumAdmin from './components/admin-pages/Forum/ForumAdmin';
 import GaleriAdmin from './components/admin-pages/Galeri/GaleriAdmin';
 import RenunganAdmin from './components/admin-pages/Renungan/RenunganAdmin';
 import DaftarPesertaKegiatan from './components/admin-pages/Kegiatan/DaftarPesertaKegiatan';
+import TambahRenungan from './components/admin-pages/Renungan/TambahRenungan';
+import EditRenungan from './components/admin-pages/Renungan/EditRenungan';
 
 
 
@@ -84,7 +86,9 @@ ReactDOM.createRoot(document.getElementById('app')).render(
         <Route path="/admin/kegiatans/create" element={<ProtectedRoute><TambahKegiatan /></ProtectedRoute>} />
         <Route path="/admin/kegiatans/:id/edit" element={<ProtectedRoute><EditKegiatan /></ProtectedRoute>} />
         <Route path="/admin/donasi" element={<ProtectedRoute><DonasiAdmin /></ProtectedRoute>} />
-        <Route path="/admin/renungan" element={<ProtectedRoute><RenunganAdmin /></ProtectedRoute>} />
+        <Route path="/admin/renungans" element={<ProtectedRoute><RenunganAdmin /></ProtectedRoute>} />
+        <Route path="/admin/renungans/create" element={<ProtectedRoute><TambahRenungan /></ProtectedRoute>} />
+        <Route path="/admin/renungans/:id/edit" element={<ProtectedRoute><EditRenungan /></ProtectedRoute>} />
         <Route path="/admin/galeri" element={<ProtectedRoute><GaleriAdmin /></ProtectedRoute>} />
         <Route path="/admin/forum" element={<ProtectedRoute><ForumAdmin /></ProtectedRoute>} />
         <Route path="/admin/profile/edit" element={<ProtectedRoute><EditAdminProfile /></ProtectedRoute>} />

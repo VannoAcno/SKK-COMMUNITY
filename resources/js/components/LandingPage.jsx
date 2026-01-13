@@ -1,5 +1,5 @@
 // resources/js/pages/LandingPage.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
@@ -7,16 +7,32 @@ import NavbarBefore from './shared/NavbarBefore';
 import Footer from './shared/Footer';
 import { Heart, Calendar } from 'lucide-react';
 
-// ✅ Data renungan dummy (nanti diganti dari API)
-const renunganDummy = {
-  tanggal: new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
-  ayat: 'Yeremia 29:11',
-  teks: 'Sebab Aku ini mengetahui rancangan-rancangan apa yang ada pada-Ku mengenai kamu, demikianlah firman TUHAN, yaitu rancangan damai sejahtera dan bukan rancangan kecelakaan, untuk memberikan kepadamu hari depan yang penuh harapan.',
-  refleksi: 'Tuhan memiliki rencana indah untuk hidup kita. Walaupun saat ini kita menghadapi tantangan, kita bisa tenang karena Ia selalu menyertai kita.',
-  kategori: 'Harapan',
-};
-
 export default function LandingPage() {
+  const [renungan, setRenungan] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRenunganHarian = async () => {
+      try {
+        const res = await fetch('/api/renungan-harian');
+        const data = await res.json();
+        setRenungan(data);
+      } catch (err) {
+        console.error('Gagal mengambil renungan harian:', err);
+        // Gunakan data dummy jika gagal
+        setRenungan({
+          tanggal: new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+          judul: 'Yeremia 29:11',
+          isi: 'Sebab Aku ini mengetahui rancangan-rancangan apa yang ada pada-Ku mengenai kamu...',
+          kategori: 'Harapan'
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRenunganHarian();
+  }, []);
+
   const schools = [
     'SMAK 1 PENABUR Surabaya',
     'SMAK KARUNIA Surabaya',
@@ -30,6 +46,18 @@ export default function LandingPage() {
     { id: 2, title: 'Bakti Sosial SKK', date: '22 Maret 2025' },
     { id: 3, title: 'Kebaktian Bersama Lintas Sekolah', date: '5 April 2025' },
   ];
+
+  if (loading) {
+    return (
+      <>
+        <NavbarBefore />
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <div className="text-[#374151]">Memuat renungan harian...</div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
@@ -143,7 +171,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ✅ RENUNGAN HARIAN — di bawah kegiatan */}
+        {/* ✅ RENUNGAN HARIAN — Ambil dari API */}
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-[#374151] mb-8">Renungan Harian</h2>
@@ -157,14 +185,13 @@ export default function LandingPage() {
                     <div>
                       <div className="flex items-center gap-2 mb-2 text-sm text-[#6B7280]">
                         <Calendar size={16} />
-                        {renunganDummy.tanggal}
+                        {renungan?.tanggal || 'Tanggal tidak diketahui'}
                       </div>
-                      <h3 className="font-bold text-lg text-[#374151]">{renunganDummy.ayat}</h3>
-                      <p className="text-[#374151] mt-2 italic">"{renunganDummy.teks}"</p>
-                      <p className="text-[#6B7280] mt-3">{renunganDummy.refleksi}</p>
+                      <h3 className="font-bold text-lg text-[#374151]">{renungan?.judul || 'Judul tidak ditemukan'}</h3>
+                      <p className="text-[#374151] mt-2 italic">"{renungan?.isi || 'Tidak ada teks renungan'}"</p>
                       <div className="mt-3">
                         <span className="inline-block bg-[#FEF9C3] text-[#374151] text-xs px-2 py-1 rounded-full">
-                          #{renunganDummy.kategori}
+                          #{renungan?.kategori || 'Umum'}
                         </span>
                       </div>
                     </div>

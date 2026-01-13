@@ -6,7 +6,9 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\PasswordController;
 use App\Http\Controllers\Api\Admin\KegiatanController;
 use App\Http\Controllers\Api\KegiatanPublicController;
-use App\Http\Controllers\Api\PesertaKegiatanController; // ✅ Tambahkan controller
+use App\Http\Controllers\Api\PesertaKegiatanController;
+use App\Http\Controllers\Api\Admin\RenunganController;
+use App\Http\Controllers\Api\RenunganPublicController; // ✅ Sudah benar
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -15,6 +17,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/password/send-code', [PasswordController::class, 'sendResetCode']);
 Route::post('/password/verify-code', [PasswordController::class, 'verifyResetCode']);
 Route::post('/password/reset', [PasswordController::class, 'resetPasswordViaCode']);
+
+// ✅ Route untuk renungan harian — bisa diakses guest
+Route::get('/renungan-harian', [RenunganPublicController::class, 'renunganHarian']);
 
 // 🔐 Route untuk user biasa (harus login)
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -36,4 +41,5 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::apiResource('kegiatans', KegiatanController::class);
     Route::post('kegiatans/{kegiatan}/selesaikan', [KegiatanController::class, 'selesaikan']);
     Route::get('kegiatans/{kegiatan}/peserta', [KegiatanController::class, 'peserta']);
+    Route::apiResource('renungans', RenunganController::class);
 });
