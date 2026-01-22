@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 
 const navItems = [
   { name: 'Dashboard', icon: BarChart3, path: '/admin/dashboard' },
-  { name: 'Kegiatan', icon: Calendar, path: '/admin/kegiatans' }, // ✅ Perbaiki: /admin/kegiatans
+  { name: 'Kegiatan', icon: Calendar, path: '/admin/kegiatans' },
   { name: 'Donasi', icon: Heart, path: '/admin/donasis' },
   { name: 'Galeri', icon: Heart, path: '/admin/galeris' },
   { name: 'Forum', icon: MessageCircle, path: '/admin/forums' },

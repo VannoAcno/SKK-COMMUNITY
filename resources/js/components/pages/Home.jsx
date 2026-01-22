@@ -1,4 +1,3 @@
-// resources/js/pages/Home.jsx
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,9 +9,10 @@ import Footer from '../shared/Footer';
 export default function Home() {
   const navigate = useNavigate();
   const [renungan, setRenungan] = useState(null);
+  const [agendas, setAgendas] = useState([]);
+  const [latestAlbum, setLatestAlbum] = useState(null); // 👈 Tambah state
   const [loading, setLoading] = useState(true);
 
-  // ✅ Ambil data user dari localStorage
   const userData = JSON.parse(localStorage.getItem('user') || '{}');
   const user = {
     fullName: userData.full_name || 'Anggota',
@@ -31,18 +31,60 @@ export default function Home() {
         setRenungan(data);
       } catch (err) {
         console.error('Gagal mengambil renungan harian:', err);
-        // Gunakan data dummy jika gagal
         setRenungan({
           tanggal: new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
           judul: 'Yeremia 29:11',
           isi: 'Sebab Aku ini mengetahui rancangan-rancangan apa yang ada pada-Ku mengenai kamu...',
           kategori: 'Harapan'
         });
-      } finally {
-        setLoading(false);
       }
     };
-    fetchRenunganHarian();
+
+    const fetchAgendas = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch('/api/kegiatans', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        
+        const agendasOnly = data
+          .filter(k => k.tipe === 'agenda')
+          .sort((a, b) => new Date(a.tanggal_mulai) - new Date(b.tanggal_mulai))
+          .slice(0, 3);
+        
+        setAgendas(agendasOnly);
+      } catch (err) {
+        console.error('Gagal mengambil agenda:', err);
+        setAgendas([
+          { id: 1, judul: 'Perayaan Paskah 2026', tanggal_mulai: '2026-04-05', lokasi: 'Gereja Katolik Paroki Santo Vincentius A Paulo, Widodaren Sawahan' },
+          { id: 2, judul: 'Ulang Tahun Vano', tanggal_mulai: '2026-07-11', lokasi: 'Menganti Palem Pertiwi' },
+          { id: 3, judul: 'Meet n Greet dengan wanita paling SETIA', tanggal_mulai: '2026-01-31', lokasi: 'Starstream' },
+        ]);
+      }
+    };
+
+    const fetchLatestAlbum = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch('/api/albums', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.length > 0) {
+          setLatestAlbum(data[0]); // album pertama = terbaru
+        }
+      } catch (err) {
+        console.error('Gagal mengambil album terbaru:', err);
+        setLatestAlbum({
+          judul: 'Retret Pemuda 2025',
+          gambar_cover: 'https://via.placeholder.com/400x200?text=Retret+Pemuda+2025'
+        });
+      }
+    };
+
+    Promise.all([fetchRenunganHarian(), fetchAgendas(), fetchLatestAlbum()])
+      .finally(() => setLoading(false));
   }, []);
 
   const shortcuts = [
@@ -85,7 +127,7 @@ export default function Home() {
       <>
         <NavbarAfter />
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-[#374151]">Memuat renungan harian...</div>
+          <div className="text-[#374151]">Memuat...</div>
         </div>
         <Footer />
       </>
@@ -110,7 +152,7 @@ export default function Home() {
             </p>
           </div>
 
-          {/* ✅ RENUNGAN HARIAN — Ambil dari API */}
+          {/* Renungan Hari Ini */}
           <div className="mb-8">
             <Card className="border-0 shadow">
               <CardHeader>
@@ -164,7 +206,7 @@ export default function Home() {
             })}
           </div>
 
-          {/* Info Tambahan (Agenda, Donasi, Galeri) — Tetap di bawah */}
+          {/* Info Tambahan */}
           <div className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Agenda Terdekat */}
             <Card className="border-0 shadow">
@@ -173,14 +215,18 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div>
-                    <div className="font-medium">Retret Pemuda 2025</div>
-                    <div className="text-sm text-[#6B7280]">15–17 Februari 2025</div>
-                  </div>
-                  <div>
-                    <div className="font-medium">Bakti Sosial SKK</div>
-                    <div className="text-sm text-[#6B7280]">22 Maret 2025</div>
-                  </div>
+                  {agendas.length > 0 ? (
+                    agendas.map((agenda) => (
+                      <div key={agenda.id}>
+                        <div className="font-medium">{agenda.judul}</div>
+                        <div className="text-sm text-[#6B7280]">
+                          {new Date(agenda.tanggal_mulai).toLocaleDateString('id-ID')} • {agenda.lokasi}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-[#6B7280] italic">Belum ada agenda terdekat.</p>
+                  )}
                   <Button variant="link" asChild className="p-0 text-[#FACC15]">
                     <Link to="/kegiatan">Lihat semua kegiatan</Link>
                   </Button>
@@ -207,19 +253,32 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            {/* Galeri Terbaru */}
+            {/* Galeri Terbaru — Diperbarui! */}
             <Card className="border-0 shadow">
               <CardHeader>
                 <CardTitle className="text-[#374151]">Galeri Terbaru</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="aspect-video bg-gradient-to-r from-[#FDE68A] to-[#FACC15] rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <Image size={32} className="text-white mx-auto mb-1" />
-                      <span className="text-white font-medium">Retret Pemuda 2025</span>
+                  {latestAlbum ? (
+                    <div className="aspect-video bg-gray-200 rounded-lg overflow-hidden">
+                      <img
+                        src={latestAlbum.gambar_cover || 'https://via.placeholder.com/400x200?text=Galeri+Tidak+Tersedia'}
+                        alt={latestAlbum.judul}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="p-3 bg-white bg-opacity-90">
+                        <span className="font-medium text-[#374151]">{latestAlbum.judul}</span>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="aspect-video bg-gradient-to-r from-[#FDE68A] to-[#FACC15] rounded-lg flex items-center justify-center">
+                      <div className="text-center">
+                        <Image size={32} className="text-white mx-auto mb-1" />
+                        <span className="text-white font-medium">Retret Pemuda 2025</span>
+                      </div>
+                    </div>
+                  )}
                   <Button variant="link" asChild className="p-0 text-[#FACC15]">
                     <Link to="/galeri">Lihat semua galeri</Link>
                   </Button>

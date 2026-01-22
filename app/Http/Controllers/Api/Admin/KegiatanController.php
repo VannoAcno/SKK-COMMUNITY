@@ -12,15 +12,23 @@ use Illuminate\Support\Facades\Log;
 class KegiatanController extends Controller
 {
     public function index()
-    {
-        try {
-            $kegiatans = Kegiatan::latest()->get();
-            return response()->json($kegiatans);
-        } catch (\Exception $e) {
-            Log::error('Failed to fetch kegiatans: ' . $e->getMessage());
-            return response()->json(['message' => 'Gagal mengambil data kegiatan'], 500);
-        }
+{
+    try {
+        $kegiatans = Kegiatan::with(['user:id,full_name,avatar'])
+            ->select('id', 'judul', 'deskripsi', 'tanggal_mulai', 'tanggal_selesai', 'lokasi', 'tipe', 'gambar', 'gambar_public_id', 'user_id', 'created_at')
+            ->latest()
+            ->get();
+
+        // --- DEBUG LOG ---
+        \Log::info('Kegiatans Data for Index:', $kegiatans->toArray());
+        // -----------------
+
+        return response()->json($kegiatans);
+    } catch (\Exception $e) {
+        Log::error('Failed to fetch kegiatans: ' . $e->getMessage());
+        return response()->json(['message' => 'Gagal mengambil data kegiatan'], 500);
     }
+}
 
     public function store(Request $request)
     {
@@ -40,6 +48,9 @@ class KegiatanController extends Controller
 
         $data = $request->only(['judul', 'deskripsi', 'tanggal_mulai', 'tanggal_selesai', 'lokasi', 'tipe']);
 
+        // ✅ Tambahkan user_id dari user yang sedang login
+        $data['user_id'] = $request->user()->id;
+
         if ($request->hasFile('gambar')) {
             $cloudName = env('CLOUDINARY_CLOUD_NAME');
             $uploadPreset = env('CLOUDINARY_UPLOAD_PRESET');
@@ -47,7 +58,7 @@ class KegiatanController extends Controller
             $file = $request->file('gambar');
             $fileName = $file->getClientOriginalName();
 
-            // ✅ DIPERBAIKI: TIDAK ADA SPASI DI URL
+            // ✅ FIX: HAPUS SPASI BERLEBIH DI URL
             $response = Http::attach(
                 'file', file_get_contents($file->getRealPath()), $fileName
             )->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/upload", [
@@ -106,7 +117,7 @@ class KegiatanController extends Controller
             $uploadPreset = env('CLOUDINARY_UPLOAD_PRESET');
             $file = $request->file('gambar');
 
-            // ✅ DIPERBAIKI: TIDAK ADA SPASI DI URL
+            // ✅ FIX: HAPUS SPASI BERLEBIH DI URL
             $response = Http::attach(
                 'file', file_get_contents($file->getRealPath()), $file->getClientOriginalName()
             )->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/upload", [
@@ -158,7 +169,7 @@ class KegiatanController extends Controller
 
             $signature = sha1("public_id={$publicId}&timestamp={$timestamp}{$apiSecret}");
 
-            // ✅ DIPERBAIKI: TIDAK ADA SPASI DI URL
+            // ✅ FIX: HAPUS SPASI BERLEBIH DI URL
             $response = Http::asForm()->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/destroy", [
                 'public_id' => $publicId,
                 'signature' => $signature,
@@ -192,13 +203,13 @@ class KegiatanController extends Controller
 
     // ✅ TAMBAHAN: Method untuk melihat daftar peserta suatu kegiatan
     public function peserta(Kegiatan $kegiatan)
-{
-    \Log::info('Fetching peserta for kegiatan ID: ' . $kegiatan->id);
+    {
+        \Log::info('Fetching peserta for kegiatan ID: ' . $kegiatan->id);
 
-    $peserta = $kegiatan->peserta()->get(['users.id', 'full_name', 'email', 'school', 'grade', 'major']);
+        $peserta = $kegiatan->peserta()->get(['users.id', 'full_name', 'email', 'school', 'grade', 'major']);
 
-    \Log::info('Peserta fetched:', $peserta->toArray());
+        \Log::info('Peserta fetched:', $peserta->toArray());
 
-    return response()->json($peserta);
-}
+        return response()->json($peserta);
+    }
 }

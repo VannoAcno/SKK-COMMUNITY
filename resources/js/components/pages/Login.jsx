@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 
 // ✅ API Base URL
 const API_BASE =
@@ -133,6 +133,20 @@ export default function Login() {
                             >
                                 Daftar Sekarang
                             </Link>
+                        </div>
+
+                        {/* ✅ Tombol Kembali ke Landing Page */}
+                        <div className="mt-6">
+                            <Button
+                                variant="outline"
+                                asChild
+                                className="w-full border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3]"
+                            >
+                                <Link to="/">
+                                    <ArrowLeft size={16} className="mr-2" />
+                                    Kembali ke Beranda
+                                </Link>
+                            </Button>
                         </div>
                     </form>
                 </CardContent>

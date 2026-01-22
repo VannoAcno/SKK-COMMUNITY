@@ -18,6 +18,7 @@ class Kegiatan extends Model
         'tipe',
         'gambar',
         'gambar_public_id',
+        'user_id', // <-- Tambahkan ini
     ];
 
     /**
@@ -28,11 +29,21 @@ class Kegiatan extends Model
     public function scopeForPublic($query)
     {
         $today = now()->toDateString();
-        return $query->where('tipe', 'laporan')
-                     ->orWhere(function ($q) use ($today) {
-                         $q->where('tipe', 'agenda')
-                           ->whereDate('tanggal_mulai', '>=', $today);
-                     });
+        return $query->where(function ($q) use ($today) {
+            $q->where('tipe', 'laporan')
+              ->orWhere(function ($q2) use ($today) {
+                  $q2->where('tipe', 'agenda')
+                     ->whereDate('tanggal_mulai', '>=', $today);
+              });
+        });
+    }
+
+    /**
+     * Relasi: Kegiatan dibuat oleh satu user (admin).
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id'); // <-- Tambahkan ini
     }
 
     /**
@@ -40,6 +51,6 @@ class Kegiatan extends Model
      */
     public function peserta()
     {
-        return $this->belongsToMany(User::class, 'peserta_kegiatan', 'kegiatan_id', 'user_id');
+        return $this->belongsToMany(User::class, 'peserta_kegiatans', 'kegiatan_id', 'user_id');
     }
 }

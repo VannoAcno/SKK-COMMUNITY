@@ -101,7 +101,7 @@ export default function RenunganAdmin() {
                     asChild
                     className="bg-[#FACC15] text-black hover:bg-[#EAB308] font-semibold"
                   >
-                    <Link to="/admin/renungans/create">
+                    <Link to="/admin/renungans/tambah">
                       <Plus size={16} className="mr-1" />
                       Tambah Renungan
                     </Link>

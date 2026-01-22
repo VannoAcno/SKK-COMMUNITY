@@ -136,7 +136,7 @@ export default function KegiatanAdmin() {
                     asChild
                     className="bg-[#FACC15] text-black hover:bg-[#EAB308] font-semibold"
                   >
-                    <Link to="/admin/kegiatans/create">
+                    <Link to="/admin/kegiatans/tambah">
                       <Plus size={16} className="mr-1" />
                       Tambah Kegiatan
                     </Link>

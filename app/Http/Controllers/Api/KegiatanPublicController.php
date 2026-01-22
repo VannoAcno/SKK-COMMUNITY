@@ -8,27 +8,19 @@ use Illuminate\Http\Request;
 
 class KegiatanPublicController extends Controller
 {
-    /**
-     * Menampilkan daftar kegiatan untuk user (hanya yang relevan).
-     * Termasuk jumlah peserta masing-masing kegiatan.
-     */
     public function index()
     {
-        $kegiatans = Kegiatan::withCount('peserta') // Tambahkan jumlah peserta
+        $kegiatans = Kegiatan::withCount('peserta')
             ->forPublic()
-            ->latest()
+            ->orderBy('tanggal_mulai', 'desc') // 🟢 Urut dari tanggal terbesar ke terkecil
             ->get();
 
         return response()->json($kegiatans);
     }
 
-    /**
-     * Menampilkan detail satu kegiatan.
-     * Termasuk jumlah peserta.
-     */
     public function show($id)
     {
-        $kegiatan = Kegiatan::withCount('peserta')->find($id); // Tambahkan jumlah peserta
+        $kegiatan = Kegiatan::withCount('peserta')->find($id);
         if (!$kegiatan) {
             return response()->json(['message' => 'Kegiatan tidak ditemukan'], 404);
         }

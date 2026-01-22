@@ -5,10 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import NavbarBefore from './shared/NavbarBefore';
 import Footer from './shared/Footer';
-import { Heart, Calendar } from 'lucide-react';
+import { Heart, Calendar, Users } from 'lucide-react';
 
 export default function LandingPage() {
   const [renungan, setRenungan] = useState(null);
+  const [kegiatans, setKegiatans] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,7 +31,25 @@ export default function LandingPage() {
         setLoading(false);
       }
     };
-    fetchRenunganHarian();
+
+    const fetchKegiatans = async () => {
+      try {
+        const res = await fetch('/api/kegiatans'); // Ambil kegiatan publik
+        const data = await res.json();
+        // Ambil 3 kegiatan terbaru
+        setKegiatans(data.slice(0, 3));
+      } catch (err) {
+        console.error('Gagal mengambil kegiatan:', err);
+        // Jangan gunakan data dummy, biarkan array kosong
+        setKegiatans([]);
+      }
+    };
+
+    // Jalankan kedua fetch secara paralel
+    Promise.all([fetchRenunganHarian(), fetchKegiatans()])
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   const schools = [
@@ -41,18 +60,12 @@ export default function LandingPage() {
     'SMAK SANTO PAULUS',
   ];
 
-  const activities = [
-    { id: 1, title: 'Retret Pemuda 2025', date: '15–17 Februari 2025' },
-    { id: 2, title: 'Bakti Sosial SKK', date: '22 Maret 2025' },
-    { id: 3, title: 'Kebaktian Bersama Lintas Sekolah', date: '5 April 2025' },
-  ];
-
   if (loading) {
     return (
       <>
         <NavbarBefore />
         <div className="min-h-screen bg-white flex items-center justify-center">
-          <div className="text-[#374151]">Memuat renungan harian...</div>
+          <div className="text-[#374151]">Memuat...</div>
         </div>
         <Footer />
       </>
@@ -153,15 +166,30 @@ export default function LandingPage() {
               <div>
                 <h2 className="text-3xl font-bold text-[#374151] mb-6">Kegiatan Terbaru</h2>
                 <div className="space-y-4">
-                  {activities.map((act) => (
-                    <div
-                      key={act.id}
-                      className="bg-white p-4 rounded-xl border-l-4 border-[#FACC15] shadow-sm"
-                    >
-                      <div className="font-bold text-[#374151]">{act.title}</div>
-                      <div className="text-[#6B7280] text-sm">{act.date}</div>
-                    </div>
-                  ))}
+                  {kegiatans.length > 0 ? (
+                    kegiatans.map((kegiatan) => (
+                      <div
+                        key={kegiatan.id}
+                        className="bg-white p-4 rounded-xl border-l-4 border-[#FACC15] shadow-sm"
+                      >
+                        <div className="font-bold text-[#374151]">{kegiatan.judul}</div>
+                        <div className="text-[#6B7280] text-sm flex flex-wrap gap-2 mt-1">
+                          <span className="flex items-center gap-1">
+                            <Calendar size={12} />
+                            {new Date(kegiatan.tanggal_mulai).toLocaleDateString('id-ID')}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Users size={12} />
+                            {kegiatan.peserta_count || 0} peserta
+                          </span>
+                          <span>•</span>
+                          <span>{kegiatan.lokasi}</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-[#6B7280] italic">Belum ada kegiatan terbaru.</p>
+                  )}
                 </div>
                 <Link to="/kegiatan" className="inline-block mt-6 text-[#FACC15] font-semibold hover:underline">
                   Lihat semua kegiatan →

@@ -13,56 +13,11 @@ import Swal from 'sweetalert2';
 export default function ForumAdmin() {
   const [admin, setAdmin] = useState(null);
   const navigate = useNavigate();
-  const [forumTopics, setForumTopics] = useState([
-    {
-      id: 1,
-      title: 'Apa renunganmu hari ini?',
-      content: 'Saya merenungkan tentang Yeremia 29:11...',
-      author: 'Maria S.',
-      author_avatar: 'https://ui-avatars.com/api/?name=Maria+S.&background=FACC15&color=ffffff',
-      created_at: '2025-01-10',
-      replies_count: 12,
-      status: 'active', // active, flagged, resolved
-      category: 'Renungan',
-    },
-    {
-      id: 2,
-      title: 'Persiapan Retret Pemuda 2025',
-      content: 'Apakah ada yang sudah mendaftar? Bagaimana persiapannya?',
-      author: 'Tim SKK',
-      author_avatar: 'https://ui-avatars.com/api/?name=Tim+SKK&background=10B981&color=ffffff',
-      created_at: '2025-01-09',
-      replies_count: 24,
-      status: 'flagged', // misal: ada komentar ofensif
-      category: 'Acara',
-    },
-    {
-      id: 3,
-      title: 'Doa untuk teman yang sakit',
-      content: 'Mohon doakan untuk Yohanes yang sedang dirawat di RS.',
-      author: 'Yohanes T.',
-      author_avatar: 'https://ui-avatars.com/api/?name=Yohanes+T.&background=8B5CF6&color=ffffff',
-      created_at: '2025-01-08',
-      replies_count: 8,
-      status: 'resolved',
-      category: 'Doa',
-    },
-    {
-      id: 4,
-      title: 'Diskusi tentang Yesaya 40:31',
-      content: 'Bagaimana kita bisa "menanti-nantikan TUHAN" dalam hidup sehari-hari?',
-      author: 'Santi P.',
-      author_avatar: 'https://ui-avatars.com/api/?name=Santi+P.&background=F59E0B&color=ffffff',
-      created_at: '2025-01-07',
-      replies_count: 5,
-      status: 'active',
-      category: 'Firman Tuhan',
-    },
-  ]);
+  const [forumTopics, setForumTopics] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [selectedTopic, setSelectedTopic] = useState(null);
 
   // Load admin dari localStorage
   useEffect(() => {
@@ -72,7 +27,44 @@ export default function ForumAdmin() {
       return;
     }
     setAdmin(userData);
+    fetchTopics();
   }, [navigate]);
+
+  const fetchTopics = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch('/api/forum', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Gagal memuat data forum');
+      const data = await res.json();
+      
+      // Format data agar sesuai dengan struktur frontend
+      const formattedData = data.map(topic => ({
+        id: topic.id,
+        title: topic.judul,
+        content: topic.isi,
+        author: topic.user?.full_name || 'Anonim',
+        created_at: topic.created_at,
+        replies_count: topic.komentars_count || 0, // ✅ Gunakan komentars_count
+        status: 'active', // API belum support status, jadi default active
+        category: 'Umum'  // API belum support category, jadi default Umum
+      }));
+
+      setForumTopics(formattedData);
+    } catch (err) {
+      console.error('Gagal mengambil forum:', err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal',
+        text: 'Tidak dapat memuat daftar forum.',
+        confirmButtonColor: '#FACC15',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!admin) {
     return (
@@ -90,7 +82,7 @@ export default function ForumAdmin() {
     return matchesSearch && matchesStatus;
   });
 
-  const handleDeleteTopic = (id) => {
+  const handleDeleteTopic = async (id) => {
     Swal.fire({
       title: 'Yakin ingin menghapus topik ini?',
       text: 'Semua komentar di dalamnya juga akan dihapus.',
@@ -100,20 +92,46 @@ export default function ForumAdmin() {
       cancelButtonColor: '#d1d5db',
       confirmButtonText: 'Ya, Hapus!',
       cancelButtonText: 'Batal',
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        setForumTopics(forumTopics.filter(t => t.id !== id));
-        Swal.fire('Berhasil!', 'Topik dihapus.', 'success');
+        try {
+          const token = localStorage.getItem('auth_token');
+          const res = await fetch(`/api/admin/forum-topik/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+
+          if (!res.ok) throw new Error('Gagal menghapus topik');
+
+          setForumTopics(forumTopics.filter(t => t.id !== id));
+          Swal.fire('Berhasil!', 'Topik dihapus.', 'success');
+        } catch (err) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal',
+            text: 'Tidak dapat menghapus topik: ' + err.message,
+            confirmButtonColor: '#FACC15',
+          });
+        }
       }
     });
   };
 
   const handleResolveFlag = (id) => {
+    // API belum support resolve flag, jadi hanya update lokal dulu
     setForumTopics(forumTopics.map(topic => 
       topic.id === id ? { ...topic, status: 'resolved' } : topic
     ));
     Swal.fire('Berhasil!', 'Topik telah diselesaikan.', 'success');
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-[#374151]">Memuat forum...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -167,14 +185,7 @@ export default function ForumAdmin() {
                         <div className="flex gap-4">
                           {/* Avatar Penulis */}
                           <div className="w-12 h-12 rounded-full bg-[#FACC15] flex items-center justify-center flex-shrink-0">
-                            <img
-                              src={topic.author_avatar}
-                              alt={topic.author}
-                              className="w-full h-full object-cover rounded-full"
-                              onError={(e) => {
-                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(topic.author)}&background=FACC15&color=ffffff`;
-                              }}
-                            />
+                            <User size={16} className="text-white" />
                           </div>
 
                           {/* Konten Topik */}
@@ -217,7 +228,7 @@ export default function ForumAdmin() {
                             <div className="flex items-center gap-4 mt-3 text-sm text-[#6B7280]">
                               <div className="flex items-center gap-1">
                                 <MessageCircle size={14} />
-                                {topic.replies_count} balasan
+                                {topic.replies_count} balasan  {/* ✅ Sudah benar */}
                               </div>
                               <div className="flex gap-2">
                                 <Button
