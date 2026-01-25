@@ -15,41 +15,47 @@ class AuthController extends Controller
      * Register a new user.
      */
     public function register(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'full_name' => 'required|string|max:255',
-            'gender' => 'required|in:L,P',
-            'birth_date' => 'required|date',
-            'school' => 'required|string|max:255',
-            'grade' => 'required|string|max:10',
-            'major' => 'nullable|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'phone' => 'required|string|max:20',
-            'address' => 'nullable|string',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
+{
+    // Buat validator instance
+    $validator = Validator::make($request->all(), [
+        'full_name' => 'required|string|max:255',
+        'gender' => 'required|in:L,P',
+        'birth_date' => 'required|date',
+        'school' => 'required|string|max:255',
+        'grade' => 'required|string|max:10',
+        'major' => 'nullable|string|max:255',
+        'email' => 'required|email|unique:users,email',
+        'phone' => 'required|string|max:20',
+        'address' => 'nullable|string',
+        'password' => 'required|string|min:8|confirmed',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validasi gagal',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        // Hash password sebelum menyimpan
-        $validatedData = $request->validated();
-        $validatedData['password'] = Hash::make($validatedData['password']);
-
-        $user = User::create($validatedData);
-
+    // Cek apakah validasi gagal
+    if ($validator->fails()) {
         return response()->json([
-            'message' => 'Pendaftaran berhasil! Silakan login.',
-            'user' => $user->only([
-                'id', 'full_name', 'gender', 'birth_date', 'school',
-                'grade', 'major', 'email', 'phone', 'address', 'avatar', 'is_admin'
-            ])
-        ], 201);
+            'message' => 'Validasi gagal',
+            'errors' => $validator->errors()
+        ], 422);
     }
+
+    $validatedData = $validator->validated();
+    // --- SAMPAI DISINI ---
+
+    // Hash password sebelum menyimpan
+    $validatedData['password'] = Hash::make($validatedData['password']);
+
+    // Pastikan model User kamu memiliki $fillable yang benar
+    // Lihat jawaban sebelumnya untuk contoh model User
+    $user = User::create($validatedData);
+
+    return response()->json([
+        'message' => 'Pendaftaran berhasil! Silakan login.',
+        'user' => $user->only([
+            'id', 'full_name', 'gender', 'birth_date', 'school',
+            'grade', 'major', 'email', 'phone', 'address'
+        ])
+    ], 201);
+}
 
     /**
      * Login user and create token.
@@ -77,14 +83,24 @@ class AuthController extends Controller
         $user = Auth::user();
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        // ✅ Kembalikan SEMUA data termasuk is_admin
+
         return response()->json([
             'message' => 'Login berhasil.',
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user' => $user->only([
-                'id', 'full_name', 'gender', 'birth_date', 'school',
-                'grade', 'major', 'email', 'phone', 'address', 'avatar', 'is_admin'
+                'id',
+                'full_name',
+                'gender',
+                'birth_date',
+                'school',
+                'grade',
+                'major',
+                'email',
+                'phone',
+                'address',
+                'avatar',
+                'is_admin'
             ])
         ]);
     }
@@ -98,13 +114,13 @@ class AuthController extends Controller
         return response()->json(['message' => 'Berhasil logout.']);
     }
 
-    // ✅ Tambahkan method ini untuk dashboard admin
+
     public function getAllUsers()
     {
-        $users = User::select('id', 'full_name', 'email', 'birth_date', 'school', 'grade', 'major', 'phone', 'address', 'created_at', 'is_admin', 'avatar') // <-- Tambahkan 'avatar'
+        $users = User::select('id', 'full_name', 'email', 'birth_date', 'school', 'grade', 'major', 'phone', 'address', 'created_at', 'is_admin', 'avatar')
             ->orderBy('created_at', 'desc')
             ->get();
-        
+
         return response()->json($users);
     }
 }

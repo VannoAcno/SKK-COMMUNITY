@@ -152,16 +152,22 @@ export default function KegiatanAdmin() {
                     {kegiatans.map((kegiatan) => (
                       <Card key={kegiatan.id} className="border-0 shadow-sm rounded-lg overflow-hidden">
                         <CardContent className="p-4">
-                          {/* Gambar */}
                           {kegiatan.gambar ? (
-                            <img
-                              src={`${kegiatan.gambar}?v=${Date.now()}`}
-                              alt={kegiatan.judul}
-                              className="w-full h-40 object-cover rounded-md mb-3"
-                              onError={(e) => {
-                                e.target.src = `https://placehold.co/400x200/FACC15/white?text=      ${encodeURIComponent(kegiatan.judul.substring(0, 15))}`;
-                              }}
-                            />
+                            <>
+                              {console.log('Gambar URL:', kegiatan.gambar)} {/* Debug log */}
+                              <img
+                                src={kegiatan.gambar.replace('http://', 'https://')}  // Force HTTPS
+                                alt={kegiatan.judul}
+                                className="w-full h-40 object-cover rounded-md mb-3"
+                                crossOrigin="anonymous"  // Tambahkan ini
+                                referrerPolicy="no-referrer"
+                                onError={(e) => {
+                                  console.log('Image failed to load:', kegiatan.gambar);
+                                  e.target.src = `https://placehold.co/400x200/FACC15/white?text=${encodeURIComponent(kegiatan.judul.substring(0, 15))}`;
+                                  e.target.onerror = null;
+                                }}
+                              />
+                            </>
                           ) : (
                             <div className="w-full h-40 bg-[#FACC15]/20 rounded-md flex items-center justify-center">
                               <span className="text-xs text-white">Tanpa Gambar</span>
