@@ -1,187 +1,199 @@
-// resources/js/pages/donasi/DonasiDetailPage.jsx
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+// resources/js/pages/donasi-flow/DonasiDetail.jsx
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Heart, Calendar, MapPin, Wallet } from 'lucide-react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { useNavigate, useParams } from 'react-router-dom';
+import { QrCode, Upload, CheckCircle, Target } from 'lucide-react';
 import NavbarAfter from '@/components/shared/NavbarAfter';
 import Footer from '@/components/shared/Footer';
 
-// Data dummy
-const donationData = {
-  1: {
-    id: 1,
-    title: 'Bantuan untuk Korban Banjir',
-    description: 'Bantu saudara kita yang terdampak banjir di Jawa Timur. Dana akan digunakan untuk logistik, obat-obatan, dan kebutuhan pokok.',
-    target: 10000000,
-    collected: 6500000,
-    endDate: '28 Februari 2025',
-    location: 'Jawa Timur',
-  },
-  2: {
-    id: 2,
-    title: 'Dana Retret Pemuda 2025',
-    description: 'Biaya transportasi, konsumsi, materi retret, dan akomodasi selama 3 hari di Villa Bukit Berbunga, Batu.',
-    target: 15000000,
-    collected: 8200000,
-    endDate: '10 Februari 2025',
-    location: 'Batu, Malang',
-  },
-};
-
 export default function DonasiDetail() {
-  const { id } = useParams();
+  const { id } = useParams(); // ID kampanye dari URL
+  const [user, setUser] = useState(null);
+  const [kampanye, setKampanye] = useState(null);
+  const [donasis, setDonasis] = useState([]);
+  const [loading, setLoading] = useState({ kampanye: true, donasis: true });
   const navigate = useNavigate();
-  const donation = donationData[id] || donationData[1];
 
-  const [amount, setAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('dana');
-
-  const progress = Math.min(100, Math.round((donation.collected / donation.target) * 100));
-
-  const handleDonate = () => {
-    if (!amount || isNaN(amount) || Number(amount) < 1000) {
-      alert('Masukkan nominal donasi minimal Rp1.000');
-      return;
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    if (userData.id) {
+      setUser(userData);
     }
-    alert(`Terima kasih! Anda berdonasi Rp ${Number(amount).toLocaleString()} untuk "${donation.title}"`);
-    navigate('/donasi');
+
+    const fetchKampanye = async () => {
+      setLoading(prev => ({ ...prev, kampanye: true }));
+      try {
+        const res = await fetch(`/api/donasi-kampanyes/${id}`, {
+          headers: {
+            'Accept': 'application/json',
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error(`Gagal mengambil data kampanye: ${res.status}`);
+        }
+
+        const data = await res.json();
+        setKampanye(data.data);
+      } catch (err) {
+        console.error('Gagal mengambil detail kampanye:', err);
+        alert(`Gagal mengambil detail kampanye: ${err.message}`);
+        navigate('/donasi');
+      } finally {
+        setLoading(prev => ({ ...prev, kampanye: false }));
+      }
+    };
+
+    const fetchDonasisForKampanye = async () => {
+      setLoading(prev => ({ ...prev, donasis: true }));
+      try {
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch('/api/donasi-success', {
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+            'Accept': 'application/json',
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error(`Gagal mengambil data donasi: ${res.status}`);
+        }
+
+        const data = await res.json();
+        const donasiForThisCampaign = data.data.filter(d => d.kampanye_id === parseInt(id));
+        setDonasis(donasiForThisCampaign);
+      } catch (err) {
+        console.error('Gagal mengambil data donasi untuk kampanye:', err);
+        alert(`Gagal mengambil data donasi untuk kampanye: ${err.message}`);
+        navigate('/donasi');
+      } finally {
+        setLoading(prev => ({ ...prev, donasis: false }));
+      }
+    };
+
+    fetchKampanye();
+    fetchDonasisForKampanye();
+  }, [id, navigate]);
+
+  const formatRupiah = (number) => {
+    if (!number) return 'Rp 0';
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(number);
   };
+
+  if (loading.kampanye) {
+    return (
+      <>
+        <NavbarAfter user={user} />
+        <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center">
+          <div className="text-[#374151]">Memuat detail kampanye...</div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  if (!kampanye) {
+    return (
+      <>
+        <NavbarAfter user={user} />
+        <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center">
+          <div className="text-[#374151]">Kampanye tidak ditemukan.</div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  const totalDonasi = donasis.reduce((sum, donasi) => sum + donasi.nominal, 0);
 
   return (
     <>
-      <NavbarAfter />
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/donasi')}
-            className="mb-6 text-[#374151] hover:bg-[#FEF9C3]"
-          >
-            ← Kembali ke Daftar Donasi
-          </Button>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Detail Campaign */}
-            <div className="lg:col-span-2">
-              <Card className="border-0 shadow-sm">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-2xl text-[#374151]">{donation.title}</CardTitle>
-                    <Heart className="text-[#FACC15]" size={24} />
+      <NavbarAfter user={user} />
+      <div className="min-h-screen bg-gradient-to-b from-[#F9FAFB] to-[#FACC15]/10 py-12">
+        <div className="container mx-auto px-4">
+          <Card className="max-w-4xl mx-auto border-0 shadow-lg bg-white">
+            <CardHeader>
+              <CardTitle className="text-2xl text-[#374151] font-bold">{kampanye.judul}</CardTitle>
+              <p className="text-[#6B7280]">{kampanye.is_active ? 'Kampanye Aktif' : 'Kampanye Tidak Aktif'}</p>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row gap-8">
+                <div className="md:w-1/2">
+                  {kampanye.gambar ? (
+                    <img
+                      src={kampanye.gambar}
+                      alt={kampanye.judul}
+                      className="w-full h-64 object-cover rounded-md border border-[#FDE68A]"
+                    />
+                  ) : (
+                    <div className="w-full h-64 bg-[#FEF9C3] flex items-center justify-center rounded-md border border-[#FDE68A]">
+                      <span className="text-[#D1D5DB]">Tidak ada gambar</span>
+                    </div>
+                  )}
+                </div>
+                <div className="md:w-1/2">
+                  <h3 className="font-bold text-xl text-[#374151] mb-4">Tentang Kampanye</h3>
+                  <p className="text-[#6B7280] mb-6">{kampanye.deskripsi}</p>
+                  <div className="bg-[#FEF9C3]/50 p-4 rounded-md border border-[#FDE68A]">
+                    <p className="text-[#374151] font-medium">Target Dana: <span className="font-bold">{formatRupiah(kampanye.target)}</span></p>
+                    <p className="text-[#374151] font-medium">Total Terkumpul: <span className="font-bold">{formatRupiah(totalDonasi)}</span></p>
+                    <p className="text-[#374151] font-medium">Jumlah Donatur: <span className="font-bold">{donasis.length}</span></p>
                   </div>
-                  <div className="flex items-center text-sm text-[#6B7280] mt-2">
-                    <MapPin size={14} className="mr-1" />
-                    {donation.location}
+                  <div className="mt-6">
+                    <Button
+                      className="w-full bg-[#FACC15] hover:bg-[#e0b70a] text-black"
+                      onClick={() => navigate(`/donasi/form`, { state: { kampanyeId: id, kampanyeJudul: kampanye.judul } })}
+                    >
+                      <Target className="mr-2 h-4 w-4" />
+                      Donasi untuk Kampanye Ini
+                    </Button>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-[#6B7280] mb-6">{donation.description}</p>
+                </div>
+              </div>
 
-                  {/* Progress */}
-                  <div className="mb-6">
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="font-medium">Terkumpul</span>
-                      <span className="font-medium">Target</span>
-                    </div>
-                    <div className="flex justify-between text-lg font-bold mb-1">
-                      <span>Rp {donation.collected.toLocaleString()}</span>
-                      <span>Rp {donation.target.toLocaleString()}</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div
-                        className="bg-[#FACC15] h-3 rounded-full"
-                        style={{ width: `${progress}%` }}
-                      ></div>
-                    </div>
-                    <div className="text-right text-sm text-[#6B7280] mt-1">
-                      {progress}% tercapai
-                    </div>
+              {/* Riwayat Donasi */}
+              <div className="mt-8">
+                <h3 className="font-bold text-xl text-[#374151] mb-4">Riwayat Donasi</h3>
+                {loading.donasis ? (
+                  <div className="text-center py-8 text-[#6B7280]">
+                    Memuat riwayat donasi...
                   </div>
-
-                  <div className="flex items-center text-sm text-[#6B7280]">
-                    <Calendar size={14} className="mr-1" />
-                    Berakhir: {donation.endDate}
+                ) : donasis.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-[#FEF9C3]">
+                      <thead className="bg-[#FEF9C3]/30">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-[#374151] uppercase tracking-wider">Nama</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-[#374151] uppercase tracking-wider">Nominal</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-[#374151] uppercase tracking-wider">Pesan</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-[#374151] uppercase tracking-wider">Tanggal</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-[#FEF9C3]">
+                        {donasis.map((d) => (
+                          <tr key={d.id}>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-[#374151]">{d.nama}</td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-[#374151]">{formatRupiah(d.nominal)}</td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-[#6B7280]">{d.pesan || '-'}</td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-[#6B7280]">{new Date(d.created_at).toLocaleDateString('id-ID')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Form Donasi */}
-            <div>
-              <Card className="border-0 shadow-sm sticky top-8">
-                <CardHeader>
-                  <CardTitle className="text-xl text-[#374151]">Donasi Sekarang</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-[#374151]">Nominal Donasi</Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]">Rp</span>
-                      <Input
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        placeholder="0"
-                        min="1000"
-                        className="pl-10 border-[#FDE68A] focus-visible:ring-[#FACC15]"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      {[50000, 100000, 200000].map((val) => (
-                        <Button
-                          key={val}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setAmount(val.toString())}
-                          className="border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3]"
-                        >
-                          Rp {val.toLocaleString()}
-                        </Button>
-                      ))}
-                    </div>
+                ) : (
+                  <div className="text-center py-8 text-[#6B7280]">
+                    Belum ada donasi masuk untuk kampanye ini.
                   </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[#374151]">Metode Pembayaran</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { id: 'dana', name: 'DANA' },
-                        { id: 'ovo', name: 'OVO' },
-                        { id: 'gopay', name: 'GoPay' },
-                        { id: 'transfer', name: 'Transfer' },
-                      ].map((method) => (
-                        <Button
-                          key={method.id}
-                          type="button"
-                          variant={paymentMethod === method.id ? 'default' : 'outline'}
-                          onClick={() => setPaymentMethod(method.id)}
-                          className={`${
-                            paymentMethod === method.id
-                              ? 'bg-[#FACC15] text-black hover:bg-[#EAB308]'
-                              : 'border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3]'
-                          }`}
-                        >
-                          <Wallet size={14} className="mr-1" />
-                          {method.name}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <Button
-                    onClick={handleDonate}
-                    className="w-full bg-[#FACC15] text-black hover:bg-[#EAB308] text-lg py-6 mt-4"
-                  >
-                    Donasi Sekarang
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
       <Footer />

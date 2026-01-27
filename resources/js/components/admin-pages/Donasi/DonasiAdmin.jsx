@@ -1,65 +1,27 @@
-// resources/js/pages/admin/DonasiAdmin.jsx
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Calendar, Plus, Edit, Trash2, Heart, Eye } from 'lucide-react';
+import { Dialog, DialogTrigger } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Search, Plus, Edit, Trash2, Users, CreditCard, Eye } from 'lucide-react'; // Tambahkan ikon Eye
 import { useNavigate } from 'react-router-dom';
 import AdminSidebar from '@/components/shared/AdminSidebar';
-import Swal from 'sweetalert2';
+import Footer from '@/components/shared/Footer';
+import TambahKampanyeForm from './TambahKampanye'; // Pastikan path sesuai
+import EditKampanyeForm from './EditKampanye';    // Pastikan path sesuai
 
 export default function DonasiAdmin() {
   const [admin, setAdmin] = useState(null);
+  const [kampanyes, setKampanyes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showTambah, setShowTambah] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editingKampanye, setEditingKampanye] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
   const navigate = useNavigate();
-  const [donasiCampaigns, setDonasiCampaigns] = useState([
-    {
-      id: 1,
-      judul: 'Bantuan untuk Korban Banjir',
-      deskripsi: 'Bantu saudara kita yang terdampak banjir di wilayah Surabaya Timur.',
-      target: 10000000,
-      terkumpul: 6500000,
-      tanggal_mulai: '2025-01-01',
-      tanggal_selesai: '2025-02-28',
-      gambar: 'https://placehold.co/400x200/FACC15/white?text=Bantuan+Banjir',
-    },
-    {
-      id: 2,
-      judul: 'Dana Retret Pemuda 2025',
-      deskripsi: 'Biaya transportasi, konsumsi, dan materi retret pemuda.',
-      target: 15000000,
-      terkumpul: 8200000,
-      tanggal_mulai: '2025-02-01',
-      tanggal_selesai: '2025-02-17',
-      gambar: 'https://placehold.co/400x200/10B981/white?text=Retret+Pemuda',
-    },
-    {
-      id: 3,
-      judul: 'Pembangunan Gedung SKK',
-      deskripsi: 'Membangun gedung kegiatan baru untuk komunitas.',
-      target: 50000000,
-      terkumpul: 12000000,
-      tanggal_mulai: '2025-03-01',
-      tanggal_selesai: '2025-12-31',
-      gambar: 'https://placehold.co/400x200/8B5CF6/white?text=Pembangunan+Gedung',
-    },
-  ]);
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [formData, setFormData] = useState({
-    judul: '',
-    deskripsi: '',
-    target: '',
-    tanggal_mulai: '',
-    tanggal_selesai: '',
-    gambar: null,
-  });
-
-  const [errors, setErrors] = useState({});
-
-  // Load admin dari localStorage
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('user') || '{}');
     if (!userData.id || !userData.is_admin) {
@@ -67,308 +29,327 @@ export default function DonasiAdmin() {
       return;
     }
     setAdmin(userData);
+    fetchKampanyes();
   }, [navigate]);
 
-  if (!admin) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-[#374151]">Memuat...</div>
-      </div>
-    );
-  }
-
-  const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: '' }));
+  const fetchKampanyes = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch('/api/admin/donasi-kampanye', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Gagal mengambil data');
+      const data = await res.json();
+      setKampanyes(data.data);
+    } catch (err) {
+      console.error(err);
+      alert('Gagal memuat kampanye donasi.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const validate = () => {
-    const newErrors = {};
-    if (!formData.judul.trim()) newErrors.judul = 'Judul wajib diisi.';
-    if (!formData.target || formData.target < 1000) newErrors.target = 'Target minimal Rp1.000.';
-    if (!formData.tanggal_mulai) newErrors.tanggal_mulai = 'Tanggal mulai wajib diisi.';
-    if (!formData.tanggal_selesai) newErrors.tanggal_selesai = 'Tanggal selesai wajib diisi.';
-    return newErrors;
-  };
+  // Handle submit TAMBAH
+  const handleTambahSubmit = async (formData) => {
+    const token = localStorage.getItem('auth_token');
+    const fd = new FormData();
+    fd.append('judul', formData.judul);
+    if (formData.deskripsi) fd.append('deskripsi', formData.deskripsi);
+    if (formData.target) fd.append('target', formData.target);
+    fd.append('is_active', formData.is_active ? '1' : '0');
+    if (formData.gambar) fd.append('gambar', formData.gambar);
 
-  const handleSave = () => {
-    const newErrors = validate();
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
+    try {
+      const res = await fetch('/api/admin/donasi-kampanye', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: fd,
+      });
 
-    if (editing) {
-      // Update existing
-      setDonasiCampaigns(donasiCampaigns.map(c => c.id === editing.id ? { ...formData, id: editing.id } : c));
-    } else {
-      // Create new
-      const newCampaign = {
-        ...formData,
-        id: Date.now(),
-        terkumpul: 0,
-        gambar: formData.gambar || 'https://placehold.co/400x200/FACC15/white?text=' + encodeURIComponent(formData.judul.substring(0, 15)),
-      };
-      setDonasiCampaigns([newCampaign, ...donasiCampaigns]);
-    }
-
-    setModalOpen(false);
-    setEditing(null);
-    setFormData({ judul: '', deskripsi: '', target: '', tanggal_mulai: '', tanggal_selesai: '', gambar: null });
-    setErrors({});
-  };
-
-  const handleDelete = (id) => {
-    Swal.fire({
-      title: 'Yakin ingin menghapus?',
-      text: 'Kampanye donasi ini akan dihapus permanen.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#FACC15',
-      cancelButtonColor: '#d1d5db',
-      confirmButtonText: 'Ya, Hapus!',
-      cancelButtonText: 'Batal',
-    }).then((result) => {
-      if (result.isConfirmed) {
-        setDonasiCampaigns(donasiCampaigns.filter(c => c.id !== id));
-        Swal.fire('Berhasil!', 'Kampanye donasi dihapus.', 'success');
+      const result = await res.json();
+      if (!res.ok) {
+        if (result.errors) setFormErrors(result.errors);
+        throw new Error(result.message || 'Gagal menyimpan.');
       }
-    });
+
+      alert(result.message);
+      setShowTambah(false);
+      setFormErrors({});
+      fetchKampanyes();
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
   };
 
-  const openEditModal = (campaign) => {
-    setEditing(campaign);
-    setFormData({
-      judul: campaign.judul,
-      deskripsi: campaign.deskripsi,
-      target: campaign.target,
-      tanggal_mulai: campaign.tanggal_mulai,
-      tanggal_selesai: campaign.tanggal_selesai,
-      gambar: campaign.gambar,
-    });
-    setModalOpen(true);
+  // Handle submit EDIT
+  const handleEditSubmit = async (formData) => {
+    const token = localStorage.getItem('auth_token');
+    const fd = new FormData();
+    fd.append('_method', 'PUT');
+    fd.append('judul', formData.judul);
+    if (formData.deskripsi) fd.append('deskripsi', formData.deskripsi);
+    if (formData.target) fd.append('target', formData.target);
+    fd.append('is_active', formData.is_active ? '1' : '0');
+    if (formData.gambar) fd.append('gambar', formData.gambar);
+
+    try {
+      const res = await fetch(`/api/admin/donasi-kampanye/${editingKampanye.id}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: fd,
+      });
+
+      const result = await res.json();
+      if (!res.ok) {
+        if (result.errors) setFormErrors(result.errors);
+        throw new Error(result.message || 'Gagal memperbarui.');
+      }
+
+      alert(result.message);
+      setShowEdit(false);
+      setEditingKampanye(null);
+      setFormErrors({});
+      fetchKampanyes();
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Hapus kampanye ini? Semua transaksi terkait juga akan dihapus.')) return;
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(`/api/admin/donasi-kampanye/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Gagal menghapus');
+      alert('Kampanye berhasil dihapus.');
+      fetchKampanyes();
+    } catch (err) {
+      alert('Gagal menghapus kampanye.');
+    }
+  };
+
+  if (!admin) return <div className="min-h-screen flex items-center justify-center">Memuat...</div>;
+
+  const filtered = kampanyes.filter(k =>
+    k.judul.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (k.deskripsi && k.deskripsi.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const formatRupiah = (num) => num ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(num) : '-';
+
+  const getProgressPercentage = (total, target) => {
+    if (!target || target === 0) return 0;
+    return Math.min(100, Math.round((total / target) * 100)); // Gunakan total dari backend
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex gap-8">
-          {/* Sidebar */}
-          <div className="w-64">
-            <AdminSidebar admin={admin} />
-          </div>
-
-          {/* Konten Utama */}
-          <div className="flex-1">
-            <Card className="border-0 shadow-sm">
-              <CardContent className="p-6">
-                {/* Header */}
-                <div className="flex justify-between items-center mb-6">
-                  <div>
-                    <h1 className="text-2xl font-bold text-[#374151]">Kelola Donasi</h1>
-                    <p className="text-[#6B7280]">Kampanye donasi untuk pelayanan SKK.</p>
+    <>
+      <div className="min-h-screen bg-[#F9FAFB]">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex gap-8">
+            <div className="w-64">
+              <AdminSidebar admin={admin} />
+            </div>
+            <div className="flex-1">
+              <Card className="border-0 shadow-sm bg-white">
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle className="text-2xl font-bold text-[#374151]">
+                        Manajemen Kampanye Donasi
+                      </CardTitle>
+                      <p className="text-[#6B7280]">Kelola kampanye donasi komunitas</p>
+                    </div>
+                    <Dialog open={showTambah} onOpenChange={setShowTambah}>
+                      <DialogTrigger asChild>
+                        <Button
+                          onClick={() => setFormErrors({})}
+                          className="bg-[#FACC15] hover:bg-[#e0b70a] text-black"
+                        >
+                          <Plus className="mr-2 h-4 w-4" /> Tambah Kampanye
+                        </Button>
+                      </DialogTrigger>
+                      <TambahKampanyeForm
+                        open={showTambah}
+                        onOpenChange={setShowTambah}
+                        onSubmit={handleTambahSubmit}
+                        errors={formErrors}
+                      />
+                    </Dialog>
                   </div>
-                  <Button
-                    onClick={() => setModalOpen(true)}
-                    className="bg-[#FACC15] text-black hover:bg-[#EAB308] font-semibold"
-                  >
-                    <Plus size={16} className="mr-1" />
-                    Tambah Kampanye
-                  </Button>
-                </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="mb-6">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280] h-4 w-4" />
+                      <Input
+                        placeholder="Cari berdasarkan judul atau deskripsi..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 border-[#FDE68A]"
+                      />
+                    </div>
+                  </div>
 
-                {/* Daftar Kampanye Donasi */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {donasiCampaigns.map((campaign) => {
-                    const progress = Math.min(100, Math.round((campaign.terkumpul / campaign.target) * 100));
-                    return (
-                      <Card key={campaign.id} className="border-0 shadow-sm">
-                        <CardContent className="p-4">
-                          {campaign.gambar && (
-                            <img
-                              src={campaign.gambar}
-                              alt={campaign.judul}
-                              className="w-full h-32 object-cover rounded-md mb-3"
-                            />
-                          )}
-                          <h3 className="font-bold text-[#374151]">{campaign.judul}</h3>
-                          <p className="text-sm text-[#6B7280] mt-1 line-clamp-2">{campaign.deskripsi}</p>
-                          
-                          {/* Progress Bar */}
-                          <div className="mt-4">
-                            <div className="flex justify-between text-sm mb-1">
-                              <span>Rp {campaign.terkumpul.toLocaleString()}</span>
-                              <span>Rp {campaign.target.toLocaleString()}</span>
+                  {loading ? (
+                    <div className="text-center py-8 text-[#6B7280]">Memuat data...</div>
+                  ) : filtered.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filtered.map((k) => {
+                        const progress = getProgressPercentage(k.total_donasi || 0, k.target || 0); // Gunakan k.total_donasi
+                        return (
+                          <Card
+                            key={k.id}
+                            className="border border-[#E5E7EB] hover:shadow-md transition-shadow"
+                          >
+                            <div className="relative">
+                              {k.gambar ? (
+                                <img
+                                  src={k.gambar}
+                                  alt={k.judul}
+                                  className="w-full h-48 object-cover rounded-t-lg"
+                                />
+                              ) : (
+                                <div className="w-full h-48 bg-[#F3F4F6] flex items-center justify-center rounded-t-lg">
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-12 w-12 text-[#9CA3AF]"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h6V4m0 0H8v4m0 0l2-2m2 2l-2 2"
+                                    />
+                                  </svg>
+                                </div>
+                              )}
+                              <Badge
+                                variant={k.is_active ? 'default' : 'secondary'}
+                                className="absolute top-2 right-2 text-xs px-2 py-1"
+                              >
+                                {k.is_active ? 'Aktif' : 'Non-Aktif'}
+                              </Badge>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div
-                                className="bg-[#FACC15] h-2 rounded-full"
-                                style={{ width: `${progress}%` }}
-                              ></div>
-                            </div>
-                            <p className="text-xs text-[#6B7280] mt-1">{progress}% tercapai</p>
-                          </div>
+                            <CardContent className="pt-4 space-y-3">
+                              <h3 className="font-semibold text-[#374151] text-lg line-clamp-2">
+                                {k.judul}
+                              </h3>
+                              <p className="text-[#6B7280] text-sm line-clamp-2">
+                                {k.deskripsi || '-'}
+                              </p>
 
-                          <div className="flex gap-2 mt-4">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openEditModal(campaign)}
-                              className="border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3]"
-                            >
-                              <Edit size={14} />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDelete(campaign.id)}
-                              className="border-[#FDE68A] text-red-500 hover:bg-red-50"
-                            >
-                              <Trash2 size={14} />
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+                              {/* Progress Donasi */}
+                              {k.target && (
+                                <div className="space-y-1">
+                                  <div className="flex justify-between text-xs text-[#6B7280]">
+                                    <span>
+                                      {formatRupiah(k.total_donasi || 0)} dari{' '} {/* Gunakan k.total_donasi */}
+                                      {formatRupiah(k.target)}
+                                    </span>
+                                    <span>{progress}%</span>
+                                  </div>
+                                  <div className="w-full bg-[#E5E7EB] rounded-full h-2">
+                                    <div
+                                      className={`h-2 rounded-full ${
+                                        progress >= 100
+                                          ? 'bg-green-500'
+                                          : progress >= 50
+                                          ? 'bg-yellow-500'
+                                          : 'bg-blue-500'
+                                      }`}
+                                      style={{ width: `${progress}%` }}
+                                    ></div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Aksi */}
+                              <div className="flex flex-wrap gap-2 pt-3">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => navigate(`/admin/donasi/kampanye/${k.id}`)}
+                                  className="border-[#FDE68A] text-[#374151] text-xs"
+                                >
+                                  <Users className="w-3 h-3 mr-1" /> Peserta
+                                </Button>
+
+                                {/* 🔹 Tombol Lihat Transaksi */}
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    navigate(`/admin/donasi/kampanye/${k.id}/transaksi`)
+                                  }
+                                  className="border-[#FDE68A] text-[#374151] text-xs"
+                                >
+                                  <CreditCard className="w-3 h-3 mr-1" /> Transaksi
+                                </Button>
+
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setEditingKampanye(k);
+                                    setFormErrors({});
+                                    setShowEdit(true);
+                                  }}
+                                  className="border-[#FDE68A] text-[#374151] text-xs"
+                                >
+                                  <Edit className="w-3 h-3 mr-1" /> Edit
+                                </Button>
+
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDelete(k.id)}
+                                  className="border-red-300 text-red-600 hover:bg-red-50 text-xs"
+                                >
+                                  <Trash2 className="w-3 h-3 mr-1" /> Hapus
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-[#6B7280]">
+                      {searchTerm ? 'Tidak ada hasil.' : 'Belum ada kampanye donasi.'}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
+      <Footer />
 
-      {/* Modal Tambah/Edit */}
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md border-0 shadow-xl">
-            <CardHeader>
-              <CardTitle className="text-[#374151]">
-                {editing ? 'Edit Kampanye Donasi' : 'Tambah Kampanye Donasi Baru'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSave();
-                }}
-                className="space-y-4"
-              >
-                <div className="space-y-2">
-                  <Label htmlFor="judul" className="text-[#374151]">
-                    Judul Kampanye <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="judul"
-                    value={formData.judul}
-                    onChange={(e) => handleChange('judul', e.target.value)}
-                    placeholder="Contoh: Bantuan Korban Banjir"
-                    className={errors.judul ? 'border-red-500' : ''}
-                  />
-                  {errors.judul && <p className="text-red-500 text-sm">{errors.judul}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="deskripsi" className="text-[#374151]">Deskripsi</Label>
-                  <Textarea
-                    id="deskripsi"
-                    value={formData.deskripsi}
-                    onChange={(e) => handleChange('deskripsi', e.target.value)}
-                    placeholder="Deskripsikan tujuan donasi..."
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="target" className="text-[#374151]">
-                    Target Donasi <span className="text-red-500">*</span>
-                  </Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-3 text-[#6B7280]">Rp</span>
-                    <Input
-                      id="target"
-                      type="number"
-                      value={formData.target}
-                      onChange={(e) => handleChange('target', e.target.value)}
-                      placeholder="10000000"
-                      className={`pl-10 ${errors.target ? 'border-red-500' : ''}`}
-                    />
-                  </div>
-                  {errors.target && <p className="text-red-500 text-sm">{errors.target}</p>}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="tanggal_mulai" className="text-[#374151]">
-                      Tanggal Mulai <span className="text-red-500">*</span>
-                    </Label>
-                    <div className="relative">
-                      <Calendar size={16} className="absolute left-3 top-3 text-[#6B7280]" />
-                      <Input
-                        id="tanggal_mulai"
-                        type="date"
-                        value={formData.tanggal_mulai}
-                        onChange={(e) => handleChange('tanggal_mulai', e.target.value)}
-                        className={`pl-10 ${errors.tanggal_mulai ? 'border-red-500' : ''}`}
-                      />
-                    </div>
-                    {errors.tanggal_mulai && <p className="text-red-500 text-sm">{errors.tanggal_mulai}</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="tanggal_selesai" className="text-[#374151]">
-                      Tanggal Selesai <span className="text-red-500">*</span>
-                    </Label>
-                    <div className="relative">
-                      <Calendar size={16} className="absolute left-3 top-3 text-[#6B7280]" />
-                      <Input
-                        id="tanggal_selesai"
-                        type="date"
-                        value={formData.tanggal_selesai}
-                        onChange={(e) => handleChange('tanggal_selesai', e.target.value)}
-                        className={`pl-10 ${errors.tanggal_selesai ? 'border-red-500' : ''}`}
-                      />
-                    </div>
-                    {errors.tanggal_selesai && <p className="text-red-500 text-sm">{errors.tanggal_selesai}</p>}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="gambar" className="text-[#374151]">Gambar Kampanye</Label>
-                  <Input
-                    id="gambar"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleChange('gambar', e.target.files[0])}
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setModalOpen(false);
-                      setEditing(null);
-                    }}
-                    className="border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3]"
-                  >
-                    Batal
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="bg-[#FACC15] text-black hover:bg-[#EAB308]"
-                  >
-                    {editing ? 'Perbarui' : 'Simpan'}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+      {/* Dialog Edit */}
+      {editingKampanye && (
+        <EditKampanyeForm
+          open={showEdit}
+          onOpenChange={(open) => {
+            setShowEdit(open);
+            if (!open) {
+              setEditingKampanye(null);
+              setFormErrors({});
+            }
+          }}
+          onSubmit={handleEditSubmit}
+          kampanye={editingKampanye}
+          errors={formErrors}
+        />
       )}
-    </div>
+    </>
   );
 }

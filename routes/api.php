@@ -1,5 +1,7 @@
 <?php
 
+// routes/api.php
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
@@ -13,6 +15,11 @@ use App\Http\Controllers\Api\Admin\ForumController;
 use App\Http\Controllers\Api\ForumPublicController;
 use App\Http\Controllers\Api\AlbumPublicController;
 use App\Http\Controllers\Api\Admin\AlbumController; 
+// ✅ Tambahkan import untuk controller donasi
+use App\Http\Controllers\Api\DonasiController;
+use App\Http\Controllers\Api\Admin\DonasiKampanyeController;
+// ✅ Tambahkan import untuk controller kampanye publik
+use App\Http\Controllers\Api\DonasiKampanyePublicController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -33,6 +40,14 @@ Route::get('/kegiatans/{id}', [KegiatanPublicController::class, 'show']);
 Route::get('/albums', [AlbumPublicController::class, 'index']);
 Route::get('/albums/{id}', [AlbumPublicController::class, 'show']);
 Route::get('/albums/{id}/fotos', [AlbumPublicController::class, 'fotosByAlbum']);
+
+// ✅ Route untuk donasi — bisa diakses guest (untuk submit)
+Route::post('/donasi', [DonasiController::class, 'store']); // Submit donasi user
+Route::get('/donasi-success', [DonasiController::class, 'indexPublic']); // Ambil donasi yang sudah success
+
+// ✅ Route PUBLIK untuk kampanye donasi aktif — bisa diakses guest/user
+Route::get('/donasi-kampanyes-aktif', [DonasiKampanyePublicController::class, 'index']);
+Route::get('/donasi-kampanyes/{id}', [DonasiKampanyePublicController::class, 'show']);
 
 // 🔐 Route untuk user biasa (harus login)
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -67,7 +82,17 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::post('/albums/{albumId}/fotos', [AlbumController::class, 'storeFoto']);
     Route::get('/albums/{albumId}/fotos', [AlbumController::class, 'fotos']);
     Route::delete('/album-fotos/{id}', [AlbumController::class, 'destroyFoto']);
-    
+
+    // ✅ Route untuk donasi admin
+    Route::get('/donasi', [DonasiController::class, 'indexAdmin']); // Ambil semua donasi (bisa difilter)
+    // ✅ Tambahkan route untuk menampilkan detail satu donasi
+    Route::get('/donasi/{donasi}', [DonasiController::class, 'showAdmin']); // Ambil detail satu donasi
+    Route::put('/donasi/{donasi}/konfirmasi', [DonasiController::class, 'updateStatus'])->name('admin.donasi.konfirmasi');
+    Route::put('/donasi/{donasi}/tolak', [DonasiController::class, 'updateStatus'])->name('admin.donasi.tolak');
+
+    // ✅ Route untuk kampanye donasi admin
+    Route::apiResource('donasi-kampanye', DonasiKampanyeController::class);
+
     // ✅ Tambahkan route untuk dashboard admin
     Route::get('/users', [AuthController::class, 'getAllUsers']); // ✅ Tambahkan ini
     Route::get('/forum-topik', [ForumController::class, 'index']); // ✅ Tambahkan ini

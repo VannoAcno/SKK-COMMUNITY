@@ -19,11 +19,13 @@ export default function DashboardAdmin() {
     const [admin, setAdmin] = useState(null);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({
-        totalUsers: 0, // Nilai default sebelum data diambil
+        totalUsers: 0,
         totalKegiatan: 0,
         totalDiskusi: 0,
+        totalDonasi: 0,
     });
     const [recentActivities, setRecentActivities] = useState([]);
+    const [recentDonations, setRecentDonations] = useState([]);
     const navigate = useNavigate();
 
     // Load admin data dari localStorage
@@ -34,7 +36,7 @@ export default function DashboardAdmin() {
             return;
         }
         setAdmin(userData);
-        fetchDashboardData(); // Panggil fungsi untuk mengambil data dari backend
+        fetchDashboardData();
     }, [navigate]);
 
     const fetchDashboardData = async () => {
@@ -43,7 +45,7 @@ export default function DashboardAdmin() {
             const token = localStorage.getItem("auth_token");
 
             // Fetch semua data secara paralel
-            const [usersRes, kegiatanRes, forumRes] = await Promise.all([
+            const [usersRes, kegiatanRes, forumRes, kampanyeRes, donasiRes] = await Promise.all([
                 fetch("/api/admin/users", {
                     headers: { Authorization: `Bearer ${token}` },
                 }),
@@ -53,65 +55,64 @@ export default function DashboardAdmin() {
                 fetch("/api/admin/forum-topik", {
                     headers: { Authorization: `Bearer ${token}` },
                 }),
+                fetch("/api/admin/donasi-kampanye", {
+                    headers: { Authorization: `Bearer ${token}` },
+                }),
+                fetch("/api/admin/donasi?status=success", {
+                    headers: { Authorization: `Bearer ${token}` },
+                }),
             ]);
 
-            // --- LOGGING: Cek status response ---
-            console.log("Users API Status:", usersRes.status);
-            console.log("Kegiatans API Status:", kegiatanRes.status);
-            console.log("Forum Topik API Status:", forumRes.status);
-
-            const [usersData, kegiatanData, forumData] = await Promise.all([
+            const [usersData, kegiatanData, forumData, kampanyeData, donasiData] = await Promise.all([
                 usersRes.json(),
                 kegiatanRes.json(),
                 forumRes.json(),
+                kampanyeRes.json(),
+                donasiRes.json(),
             ]);
 
-            // --- LOGGING: Cek data yang diterima ---
-            console.log("Users Data:", usersData);
-            console.log("Kegiatans Data:", kegiatanData);
-            console.log("Forum Topik Data:", forumData);
+            // Hitung total donasi dari semua kampanye
+            let totalDonasiAmount = 0;
+            if (kampanyeData.success && kampanyeData.data) {
+                totalDonasiAmount = kampanyeData.data.reduce((sum, kampanye) => {
+                    return sum + (parseInt(kampanye.total_donasi) || 0);
+                }, 0);
+            }
 
             // Set stats dengan data dari backend
             setStats({
-                totalUsers: usersData.length, // <-- DARI BACKEND
-                totalKegiatan: kegiatanData.length, // <-- DARI BACKEND
-                totalDiskusi: forumData.length, // <-- DARI BACKEND
+                totalUsers: usersData.length,
+                totalKegiatan: kegiatanData.length,
+                totalDiskusi: forumData.length,
+                totalDonasi: totalDonasiAmount,
             });
 
             // --- PERBAIKAN: Ambil avatar dari user ---
             const activities = [
                 ...usersData.slice(0, 2).map((user) => ({
                     id: user.id,
-                    user: user.full_name, // <-- Dari /api/admin/users
-                    avatar: user.avatar, // <-- Dari /api/admin/users
+                    user: user.full_name,
+                    avatar: user.avatar,
                     action: "mendaftar sebagai pengguna",
                     time: new Date(user.created_at).toLocaleString("id-ID"),
                     type: "user",
                 })),
                 ...kegiatanData.slice(0, 2).map((kegiatan) => {
-                    const user = kegiatan.user; // Ambil user dari relasi kegiatan
-                    // --- LOGGING: Cek data kegiatan dan user ---
-                    console.log("Processing Kegiatan:", kegiatan);
-                    console.log("Kegiatan User (relasi):", user);
+                    const user = kegiatan.user;
                     return {
                         id: kegiatan.id,
-                        user: user?.full_name || "Admin", // Jika user ada, gunakan namanya. Jika tidak, pakai 'Admin'
-                        avatar: user?.avatar, // Ambil avatar jika ada
+                        user: user?.full_name || "Admin",
+                        avatar: user?.avatar,
                         action: `membuat kegiatan "${kegiatan.judul}"`,
-                        time: new Date(kegiatan.created_at).toLocaleString(
-                            "id-ID",
-                        ),
+                        time: new Date(kegiatan.created_at).toLocaleString("id-ID"),
                         type: "kegiatan",
                     };
                 }),
                 ...forumData.slice(0, 2).map((topik) => {
-                    // --- LOGGING: Cek data forum topik dan user ---
-                    console.log("Processing Forum Topik:", topik);
-                    console.log("Forum Topik User (relasi):", topik.user);
                     return {
                         id: topik.id,
                         user: topik.user?.full_name || "Pengguna",
-                        avatar: topik.user?.avatar, // <-- Ambil avatar dari user yang membuat topik
+                        avatar: topik.user?.avatar,
                         action: `membuat diskusi "${topik.judul}"`,
                         time: new Date(topik.created_at).toLocaleString("id-ID"),
                         type: "diskusi",
@@ -121,10 +122,24 @@ export default function DashboardAdmin() {
                 .sort((a, b) => new Date(b.time) - new Date(a.time))
                 .slice(0, 4);
 
-            // --- LOGGING: Cek aktivitas final ---
-            console.log("Final Recent Activities:", activities);
-
             setRecentActivities(activities);
+
+            // Set recent donations (maksimal 3 terbaru)
+            if (donasiData.success && donasiData.data) {
+                const recentDonations = donasiData.data.slice(0, 3).map((donasi) => ({
+                    id: donasi.id,
+                    donor: donasi.nama || donasi.user?.full_name || "Anonim",
+                    amount: donasi.nominal,
+                    date: new Date(donasi.created_at).toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                    }),
+                    campaign: donasi.kampanye?.judul || "Donasi Umum",
+                }));
+                setRecentDonations(recentDonations);
+            }
+
         } catch (err) {
             console.error("Gagal mengambil data dashboard:", err);
         } finally {
@@ -132,60 +147,49 @@ export default function DashboardAdmin() {
         }
     };
 
-    // Data dummy untuk donasi (karena fitur donasi belum dibuat)
-    const dummyDonasiData = [
-        {
-            donor: "Andi Prasetyo",
-            amount: "Rp 500.000",
-            date: "15 Jan 2025",
-            campaign: "Bantuan Banjir",
-        },
-        {
-            donor: "Siti Rahma",
-            amount: "Rp 1.000.000",
-            date: "14 Jan 2025",
-            campaign: "Retret Pemuda",
-        },
-        {
-            donor: "Joko Widodo",
-            amount: "Rp 750.000",
-            date: "13 Jan 2025",
-            campaign: "Pembangunan Gedung",
-        },
-    ];
+    // Fungsi format donasi yang lebih ringkas
+    const formatDonasi = (amount) => {
+        if (amount === 0) return 'Rp 0';
+        
+        if (amount >= 1000000000) {
+            return 'Rp ' + (amount / 1000000000).toFixed(1).replace(/\.?0+$/, '') + ' M';
+        } else if (amount >= 1000000) {
+            return 'Rp ' + (amount / 1000000).toFixed(1).replace(/\.?0+$/, '') + ' JT';
+        } else if (amount >= 1000) {
+            return 'Rp ' + (amount / 1000).toFixed(1).replace(/\.?0+$/, '') + ' RB';
+        } else {
+            return 'Rp ' + amount;
+        }
+    };
 
-    // Konfigurasi stats sekarang menggunakan nilai dari state
+    // Konfigurasi stats dengan penyesuaian tata letak
     const statsConfig = [
         {
             title: "Total Pengguna",
-            value: stats.totalUsers, // <-- DARI BACKEND
+            value: stats.totalUsers,
             icon: Users,
             color: "bg-[#FACC15]",
-            change: "+0%",
             path: "/admin/users",
         },
         {
             title: "Total Kegiatan",
-            value: stats.totalKegiatan, // <-- DARI BACKEND
+            value: stats.totalKegiatan,
             icon: Calendar,
             color: "bg-[#3B82F6]",
-            change: "+0%",
             path: "/admin/kegiatans",
         },
         {
             title: "Total Diskusi",
-            value: stats.totalDiskusi, // <-- DARI BACKEND
+            value: stats.totalDiskusi,
             icon: MessageCircle,
             color: "bg-[#8B5CF6]",
-            change: "+0%",
             path: "/admin/forum",
         },
         {
             title: "Total Donasi",
-            value: "Rp245jt", // <-- DATA DUMMY
+            value: formatDonasi(stats.totalDonasi),
             icon: Heart,
             color: "bg-[#10B981]",
-            change: "+0%",
             path: "/admin/donasis",
         },
     ];
@@ -250,8 +254,7 @@ export default function DashboardAdmin() {
                                             Dashboard Admin
                                         </h1>
                                         <p className="text-[#6B7280]">
-                                            Ringkasan aktivitas sistem dan
-                                            statistik komunitas.
+                                            Ringkasan aktivitas sistem dan statistik komunitas.
                                         </p>
                                     </div>
 
@@ -263,40 +266,24 @@ export default function DashboardAdmin() {
                                                 <div
                                                     key={index}
                                                     className="cursor-pointer hover:shadow-md transition-shadow"
-                                                    onClick={() =>
-                                                        navigate(stat.path)
-                                                    }
+                                                    onClick={() => navigate(stat.path)}
                                                 >
-                                                    <Card className="border-0 shadow-sm">
-                                                        <CardContent className="p-6">
-                                                            <div className="flex justify-between items-start">
-                                                                <div>
+                                                    <Card className="border-0 shadow-sm h-full">
+                                                        <CardContent className="p-6 flex flex-col h-full">
+                                                            <div className="flex justify-between items-start flex-1">
+                                                                <div className="flex-1">
                                                                     <p className="text-sm text-[#6B7280]">
-                                                                        {
-                                                                            stat.title
-                                                                        }
+                                                                        {stat.title}
                                                                     </p>
-                                                                    <p className="text-2xl font-bold text-[#374151]">
-                                                                        {
-                                                                            stat.value
-                                                                        }
-                                                                    </p>
-                                                                    <p className="text-xs text-[#10B981] mt-1">
-                                                                        {
-                                                                            stat.change
-                                                                        }{" "}
-                                                                        dari
-                                                                        bulan
-                                                                        lalu
+                                                                    <p className="text-2xl font-bold text-[#374151] whitespace-nowrap overflow-hidden text-ellipsis">
+                                                                        {stat.value}
                                                                     </p>
                                                                 </div>
                                                                 <div
-                                                                    className={`${stat.color} w-12 h-12 rounded-full flex items-center justify-center`}
+                                                                    className={`${stat.color} w-12 h-12 rounded-full flex items-center justify-center ml-4`}
                                                                 >
                                                                     <Icon
-                                                                        size={
-                                                                            24
-                                                                        }
+                                                                        size={24}
                                                                         className="text-white"
                                                                     />
                                                                 </div>
@@ -323,74 +310,52 @@ export default function DashboardAdmin() {
                                                     </h3>
                                                 </div>
                                                 <div className="space-y-3">
-                                                    {recentActivities.length >
-                                                    0 ? (
-                                                        recentActivities.map(
-                                                            (activity) => (
-                                                                <div
-                                                                    key={
-                                                                        activity.id
-                                                                    }
-                                                                    className="flex items-center gap-3 p-3 bg-[#FEF9C3]/30 rounded-md"
-                                                                >
-                                                                    {/* --- PERBAIKAN: Render Avatar --- */}
-                                                                    <div className="w-8 h-8 rounded-full bg-[#FACC15] flex items-center justify-center overflow-hidden">
-                                                                        {activity.avatar ? (
-                                                                            <img
-                                                                                src={
-                                                                                    activity.avatar
-                                                                                }
-                                                                                alt={
-                                                                                    activity.user
-                                                                                }
-                                                                                className="w-full h-full object-cover"
-                                                                                onError={(
-                                                                                    e,
-                                                                                ) => {
-                                                                                    e.target.src = `https://ui-avatars.com/api/?name=  ${encodeURIComponent(activity.user || "A")}&background=FACC15&color=ffffff`;
-                                                                                }}
-                                                                            />
-                                                                        ) : (
-                                                                            <User
-                                                                                size={
-                                                                                    14
-                                                                                }
-                                                                                className="text-white"
-                                                                            />
-                                                                        )}
-                                                                    </div>
-                                                                    {/* --- END PERBAIKAN --- */}
-                                                                    <div className="flex-1">
-                                                                        <p className="text-sm font-medium text-[#374151]">
-                                                                            <span className="font-semibold">
-                                                                                {
-                                                                                    activity.user
-                                                                                }
-                                                                            </span>{" "}
-                                                                            {
-                                                                                activity.action
-                                                                            }
-                                                                        </p>
-                                                                        <p className="text-xs text-[#6B7280]">
-                                                                            {
-                                                                                activity.time
-                                                                            }
-                                                                        </p>
-                                                                    </div>
+                                                    {recentActivities.length > 0 ? (
+                                                        recentActivities.map((activity) => (
+                                                            <div
+                                                                key={activity.id}
+                                                                className="flex items-center gap-3 p-3 bg-[#FEF9C3]/30 rounded-md"
+                                                            >
+                                                                <div className="w-8 h-8 rounded-full bg-[#FACC15] flex items-center justify-center overflow-hidden">
+                                                                    {activity.avatar ? (
+                                                                        <img
+                                                                            src={activity.avatar}
+                                                                            alt={activity.user}
+                                                                            className="w-full h-full object-cover"
+                                                                            onError={(e) => {
+                                                                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(activity.user || "A")}&background=FACC15&color=ffffff`;
+                                                                            }}
+                                                                        />
+                                                                    ) : (
+                                                                        <User
+                                                                            size={14}
+                                                                            className="text-white"
+                                                                        />
+                                                                    )}
                                                                 </div>
-                                                            ),
-                                                        )
+                                                                <div className="flex-1">
+                                                                    <p className="text-sm font-medium text-[#374151]">
+                                                                        <span className="font-semibold">
+                                                                            {activity.user}
+                                                                        </span>{" "}
+                                                                        {activity.action}
+                                                                    </p>
+                                                                    <p className="text-xs text-[#6B7280]">
+                                                                        {activity.time}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        ))
                                                     ) : (
                                                         <div className="text-center py-4 text-[#6B7280]">
-                                                            Belum ada aktivitas
-                                                            terbaru
+                                                            Belum ada aktivitas terbaru
                                                         </div>
                                                     )}
                                                 </div>
                                             </CardContent>
                                         </Card>
 
-                                        {/* Donasi Terbaru (Dummy Data) */}
+                                        {/* Donasi Terbaru (DATA DARI BACKEND) */}
                                         <Card className="border-0 shadow-sm">
                                             <CardContent className="p-6">
                                                 <div className="flex items-center gap-2 mb-4">
@@ -403,38 +368,34 @@ export default function DashboardAdmin() {
                                                     </h3>
                                                 </div>
                                                 <div className="space-y-3">
-                                                    {dummyDonasiData.map(
-                                                        (donation, index) => (
+                                                    {recentDonations.length > 0 ? (
+                                                        recentDonations.map((donation) => (
                                                             <div
-                                                                key={index}
+                                                                key={donation.id}
                                                                 className="flex justify-between items-center p-3 border border-[#FDE68A] rounded-lg"
                                                             >
                                                                 <div>
                                                                     <p className="font-medium text-[#374151]">
-                                                                        {
-                                                                            donation.donor
-                                                                        }
+                                                                        {donation.donor}
                                                                     </p>
                                                                     <p className="text-sm text-[#6B7280]">
-                                                                        {
-                                                                            donation.campaign
-                                                                        }
+                                                                        {donation.campaign}
                                                                     </p>
                                                                 </div>
                                                                 <div className="text-right">
                                                                     <p className="font-bold text-[#374151]">
-                                                                        {
-                                                                            donation.amount
-                                                                        }
+                                                                        {formatDonasi(donation.amount)}
                                                                     </p>
                                                                     <p className="text-xs text-[#6B7280]">
-                                                                        {
-                                                                            donation.date
-                                                                        }
+                                                                        {donation.date}
                                                                     </p>
                                                                 </div>
                                                             </div>
-                                                        ),
+                                                        ))
+                                                    ) : (
+                                                        <div className="text-center py-4 text-[#6B7280]">
+                                                            Belum ada donasi terbaru
+                                                        </div>
                                                     )}
                                                 </div>
                                             </CardContent>
