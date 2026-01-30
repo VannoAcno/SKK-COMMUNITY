@@ -26,8 +26,7 @@ import Forum from './components/pages/Forum';
 import KritikSaran from './components/pages/KritikSaran';
 import Profile from './components/pages/Profile';
 import DonasiDetail from './components/pages/donasi-flow/DonasiDetail';
-import DonasiForm from './components/pages/donasi-flow/DonasiForm'; // ✅ Tambahkan import ini
-// 🔹 Import TransaksiDetail
+import DonasiForm from './components/pages/donasi-flow/DonasiForm';
 import TransaksiDetail from './components/admin-pages/Donasi/TransaksiDetail';
 import EditProfile from './components/pages/profile-flow/EditProfile';
 import GantiPassword from './components/pages/profile-flow/GantiPassword';
@@ -44,8 +43,6 @@ import TambahRenungan from './components/admin-pages/Renungan/TambahRenungan';
 import EditRenungan from './components/admin-pages/Renungan/EditRenungan';
 import ForumDetail from './components/pages/forum-flow/ForumDetail';
 import TambahTopik from './components/pages/forum-flow/TambahTopik';
-
-// ✅ Import komponen album
 import TambahAlbum from './components/admin-pages/Album/TambahAlbum';
 import EditAlbum from './components/admin-pages/Album/EditAlbum';
 import AlbumDetail from './components/admin-pages/Album/AlbumDetail';
@@ -55,6 +52,8 @@ import AlbumViewer from './components/pages/album-flow/AlbumViewer';
 import TotalUsers from './components/admin-pages/TotalUsers';
 import KampanyeDetail from './components/admin-pages/Donasi/KampanyeDetail';
 import TransaksiKampanye from './components/admin-pages/Donasi/TransaksiKampanye';
+import DonasiPerBulan from './components/admin-pages/Donasi/DonasiPerBulan';
+import RiwayatDonasi from './components/pages/donasi-flow/RiwayatDonasi';
 
 console.log("✅ LandingPage imported, mounting React...");
 
@@ -86,10 +85,13 @@ ReactDOM.createRoot(document.getElementById('app')).render(
         <Route path="/kegiatan" element={<ProtectedRoute><Kegiatan /></ProtectedRoute>} />
         <Route path="/kegiatan/:id" element={<ProtectedRoute><KegiatanDetail /></ProtectedRoute>} />
         <Route path="/galeri" element={<ProtectedRoute><Galeri /></ProtectedRoute>} />
+        
+        {/* 🔴 PERBAIKAN: GUNAKAN PATH BARU YANG TIDAK BENTROK 🔴 */}
         <Route path="/donasi" element={<ProtectedRoute><Donasi /></ProtectedRoute>} />
-        {/* ✅ Tambahkan rute ini SEBELUM rute /donasi/:id */}
+        <Route path="/riwayat-donasi" element={<ProtectedRoute><RiwayatDonasi /></ProtectedRoute>} />
         <Route path="/donasi/form" element={<ProtectedRoute><DonasiForm /></ProtectedRoute>} />
         <Route path="/donasi/:id" element={<ProtectedRoute><DonasiDetail /></ProtectedRoute>} />
+        
         <Route path="/forum" element={<ProtectedRoute><Forum /></ProtectedRoute>} />
         <Route path="/forum/:id" element={<ProtectedRoute><ForumDetail /></ProtectedRoute>} />
         <Route path="/forum/tambah" element={<ProtectedRoute><TambahTopik /></ProtectedRoute>} />
@@ -104,17 +106,12 @@ ReactDOM.createRoot(document.getElementById('app')).render(
         <Route path="/admin/kegiatans/tambah" element={<ProtectedRoute><TambahKegiatan /></ProtectedRoute>} />
         <Route path="/admin/kegiatans/:id/edit" element={<ProtectedRoute><EditKegiatan /></ProtectedRoute>} />
 
-        {/* === 🔧 RUTE DONASI ADMIN - SUDAH DIPERBAIKI === */}
+        {/* === 🔧 RUTE DONASI ADMIN === */}
         <Route path="/admin/donasis" element={<ProtectedRoute><DonasiAdmin /></ProtectedRoute>} />
-        {/* 🔹 Tambahkan rute untuk TransaksiDetail */}
+        <Route path="/admin/donasis/perbulan" element={<ProtectedRoute><DonasiPerBulan /></ProtectedRoute>} />
         <Route path="/admin/donasis/:id/detail" element={<ProtectedRoute><TransaksiDetail /></ProtectedRoute>} />
         <Route path="/admin/donasi/kampanye/:id" element={<ProtectedRoute><KampanyeDetail /></ProtectedRoute>} />
         <Route path="/admin/donasi/kampanye/:id/transaksi" element={<ProtectedRoute><TransaksiKampanye /></ProtectedRoute>} />
-        {/* ❌ Rute berikut DIHAPUS karena tidak digunakan (form modal):
-            - /admin/tambah-kampanye
-            - /admin/edit-kampanye
-            - /admin/status-transaksi
-        */}
 
         <Route path="/admin/renungans" element={<ProtectedRoute><RenunganAdmin /></ProtectedRoute>} />
         <Route path="/admin/renungans/tambah" element={<ProtectedRoute><TambahRenungan /></ProtectedRoute>} />

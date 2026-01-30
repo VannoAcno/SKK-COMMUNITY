@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Target, Heart, Image as ImageIcon } from 'lucide-react';
+import { Target, Heart, Image as ImageIcon, History } from 'lucide-react';
 import NavbarAfter from '../shared/NavbarAfter';
 import Footer from '../shared/Footer';
 
@@ -32,8 +32,7 @@ export default function Donasi() {
         }
 
         const data = await res.json();
-        // Filter hanya kampanye yang aktif (sudah difilter di backend, tapi tetap aman untuk filter lagi jika perlu)
-        const aktif = data.data; // Karena controller sudah memfilter is_active
+        const aktif = data.data;
         setKampanyes(aktif);
       } catch (err) {
         console.error('Gagal mengambil kampanye donasi:', err);
@@ -71,15 +70,28 @@ export default function Donasi() {
     <>
       <NavbarAfter user={user} />
       <div className="min-h-screen bg-gradient-to-b from-[#F9FAFB] to-[#FACC15]/10 py-12">
-        <div className="container mx-auto px-4">
-          <Card className="max-w-4xl mx-auto border-0 shadow-lg bg-white">
+        <div className="container mx-auto px-4 max-w-6xl">
+          {/* Header dengan Button Riwayat */}
+          <div className="mb-8 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-[#374151]">Donasi Komunitas</h1>
+              <p className="text-[#6B7280] mt-2">Dukung kegiatan dan program komunitas kami dengan berdonasi.</p>
+            </div>
+            {user && (
+              <Link to="/riwayat-donasi">
+                <Button className="bg-[#FACC15] hover:bg-[#e0b70a] text-black flex items-center gap-2 px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                  <History size={20} />
+                  Riwayat Donasi Saya
+                </Button>
+              </Link>
+            )}
+          </div>
+
+          <Card className="border-0 shadow-lg bg-white">
             <CardHeader>
               <CardTitle className="text-2xl text-[#374151] font-bold text-center flex items-center justify-center gap-2">
                 <Heart className="text-[#FACC15]" /> Donasi untuk Komunitas
               </CardTitle>
-              <p className="text-center text-[#6B7280]">
-                Dukung kegiatan dan program komunitas kami dengan berdonasi.
-              </p>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -87,15 +99,15 @@ export default function Donasi() {
                   kampanyes.map((k) => (
                     <Card key={k.id} className="border-0 shadow-sm hover:shadow-md transition-shadow bg-white border border-[#FEF9C3] flex flex-col">
                       {/* Bagian Gambar */}
-                      <div className="relative pb-[56.25%] overflow-hidden rounded-t-md"> {/* Aspect ratio 16:9 */}
+                      <div className="relative pb-[56.25%] overflow-hidden rounded-t-md">
                         {k.gambar ? (
                           <img
                             src={k.gambar}
                             alt={k.judul}
                             className="w-full h-full object-cover absolute inset-0"
                             onError={(e) => {
-                              e.target.style.display = 'none'; // Sembunyikan jika error
-                              e.target.nextSibling.style.display = 'flex'; // Tampilkan ikon fallback
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
                             }}
                           />
                         ) : (
@@ -132,15 +144,6 @@ export default function Donasi() {
                   <div className="col-span-full text-center py-12">
                     <Target className="mx-auto text-[#D1D5DB] mb-4" size={48} />
                     <p className="text-[#6B7280]">Belum ada kampanye donasi.</p>
-                    <Button
-                      className="mt-4 bg-[#FACC15] hover:bg-[#e0b70a] text-black"
-                      asChild
-                    >
-                      <Link to="/donasi">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Muat Ulang
-                      </Link>
-                    </Button>
                   </div>
                 )}
               </div>

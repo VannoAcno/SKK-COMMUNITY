@@ -13,9 +13,6 @@ use Illuminate\Support\Facades\DB;
 
 class DonasiController extends Controller
 {
-    /**
-     * Store a newly created donation in storage.
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -130,8 +127,42 @@ class DonasiController extends Controller
     }
 
     /**
-     * Update status donasi dengan penanganan error robust.
+     * Get donasi per bulan untuk dashboard admin
      */
+    public function donasiPerBulan(Request $request)
+    {
+        $tahun = $request->get('tahun', date('Y'));
+        
+        // ✅ GANTI 'donasi' MENJADI 'donasis' SESUAI MIGRATION
+        $donasiPerBulan = DB::table('donasis')
+            ->select(
+                DB::raw('MONTH(created_at) as bulan'),
+                DB::raw('SUM(nominal) as total_donasi'),
+                DB::raw('COUNT(*) as jumlah_donasi')
+            )
+            ->whereYear('created_at', $tahun)
+            ->where('status', 'success')
+            ->groupBy('bulan')
+            ->orderBy('bulan')
+            ->get();
+        
+        // ✅ GANTI 'donasi' MENJADI 'donasis' SESUAI MIGRATION
+        $years = DB::table('donasis')
+            ->select(DB::raw('DISTINCT YEAR(created_at) as tahun'))
+            ->where('status', 'success')
+            ->orderBy('tahun', 'desc')
+            ->limit(5)
+            ->pluck('tahun')
+            ->toArray();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $donasiPerBulan,
+            'years' => $years,
+            'tahun' => (int)$tahun
+        ]);
+    }
+
     public function updateStatus(Request $request, Donasi $donasi)
     {
         $action = $request->route()->getName();
@@ -153,15 +184,12 @@ class DonasiController extends Controller
                 $oldStatus = $donasi->status;
                 $nominalDonasi = (int) $donasi->nominal;
 
-                // Update status donasi
                 $donasi->update(['status' => $status]);
 
-                // Hanya proses kampanye jika ada
                 if (!empty($donasi->kampanye_id)) {
                     $kampanye = DonasiKampanye::find($donasi->kampanye_id);
 
                     if ($kampanye) {
-                        // Ambil total_donasi dan pastikan integer
                         $currentTotal = is_numeric($kampanye->total_donasi) ? (int) $kampanye->total_donasi : 0;
                         $newTotal = $currentTotal;
 
@@ -173,7 +201,6 @@ class DonasiController extends Controller
 
                         $newTotal = max(0, $newTotal);
 
-                        // Update hanya jika berubah
                         if ($newTotal !== $currentTotal) {
                             $kampanye->update(['total_donasi' => $newTotal]);
                         }

@@ -190,7 +190,7 @@ export default function DashboardAdmin() {
             value: formatDonasi(stats.totalDonasi),
             icon: Heart,
             color: "bg-[#10B981]",
-            path: "/admin/donasis",
+            path: "/admin/donasis/perbulan",
         },
     ];
 
