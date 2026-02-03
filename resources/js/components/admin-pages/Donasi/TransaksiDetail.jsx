@@ -8,8 +8,7 @@ import { ArrowLeft, CheckCircle, XCircle, Clock, Image as ImageIcon, Eye } from 
 import { useParams, useNavigate } from 'react-router-dom';
 import AdminSidebar from '@/components/shared/AdminSidebar';
 import Footer from '@/components/shared/Footer';
-// ✅ Import SweetAlert2
-import Swal from 'sweetalert2';
+import Swal from 'sweetalert2'; // ✅ Import SweetAlert2
 
 export default function TransaksiDetail() {
   const { id } = useParams(); // ID donasi dari URL
@@ -29,6 +28,7 @@ export default function TransaksiDetail() {
     setAdmin(userData);
 
     const fetchDonasiDetail = async () => {
+      setLoading(true);
       try {
         const token = localStorage.getItem('auth_token');
         if (!token) {
@@ -52,6 +52,13 @@ export default function TransaksiDetail() {
 
       } catch (err) {
         console.error('Error fetching donasi detail:', err);
+        // alert(`Gagal mengambil data donasi: ${err.message}`); // ❌ GANTI INI
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal',
+          text: `Gagal mengambil data donasi: ${err.message}`,
+          confirmButtonColor: '#FACC15',
+        });
         setError(err.message); // Simpan pesan error untuk ditampilkan
       } finally {
         setLoading(false);
@@ -400,7 +407,7 @@ export default function TransaksiDetail() {
                           </Dialog>
                         ) : (
                           <div className="text-center text-[#6B7280]">
-                            <ImageIcon className="mx-auto h-12 w-12 text-gray-300 mb-2" />
+                            <ImageIcon size={48} className="mx-auto mb-2 text-[#D1D5DB]" />
                             <p>Tidak ada bukti transfer.</p>
                           </div>
                         )}

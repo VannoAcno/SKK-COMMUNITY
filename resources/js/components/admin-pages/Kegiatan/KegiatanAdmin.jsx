@@ -1,10 +1,13 @@
+// resources/js/pages/admin/KegiatanAdmin.jsx
 import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, Plus, Edit, Trash2, CheckCircle, Users } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Link, useNavigate } from 'react-router-dom';
+import { Calendar, Plus, Edit, Trash2, CheckCircle, Users, Target } from 'lucide-react';
 import AdminSidebar from '@/components/shared/AdminSidebar';
-import Swal from 'sweetalert2';
+import Footer from '@/components/shared/Footer';
+import Swal from 'sweetalert2'; // Tambahkan import ini
 
 export default function KegiatanAdmin() {
   const [admin, setAdmin] = useState(null);
@@ -34,10 +37,12 @@ export default function KegiatanAdmin() {
       const data = await res.json();
       setKegiatans(data);
     } catch (err) {
+      console.error('Gagal mengambil kegiatan:', err);
+      // alert(`Gagal mengambil daftar kegiatan: ${err.message}`); // ❌ GANTI INI
       Swal.fire({
         icon: 'error',
         title: 'Gagal',
-        text: 'Tidak dapat memuat daftar kegiatan.',
+        text: `Gagal mengambil daftar kegiatan: ${err.message}`,
         confirmButtonColor: '#FACC15',
       });
     } finally {
@@ -46,9 +51,10 @@ export default function KegiatanAdmin() {
   };
 
   const handleDelete = async (id) => {
+    // const result = window.confirm('Yakin ingin menghapus kegiatan ini?'); // ❌ GANTI INI
     const result = await Swal.fire({
       title: 'Yakin ingin menghapus kegiatan ini?',
-      text: 'Kegiatan akan dihapus permanen dari database.',
+      text: "Kegiatan akan dihapus permanen dari database.",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#FACC15',
@@ -66,23 +72,31 @@ export default function KegiatanAdmin() {
         });
         if (!res.ok) throw new Error('Gagal menghapus dari server');
         setKegiatans(kegiatans.filter(k => k.id !== id));
-        Swal.fire('Berhasil!', 'Kegiatan dihapus dari database.', 'success');
+        // alert('Kegiatan dihapus dari database.'); // ❌ GANTI INI
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil!',
+          text: 'Kegiatan dihapus dari database.',
+          confirmButtonColor: '#FACC15',
+        });
       } catch (err) {
+        console.error('Gagal menghapus kegiatan:', err);
+        // alert(`Gagal menghapus kegiatan: ${err.message}`); // ❌ GANTI INI
         Swal.fire({
           icon: 'error',
           title: 'Gagal',
-          text: 'Tidak dapat menghapus kegiatan: ' + err.message,
+          text: `Gagal menghapus kegiatan: ${err.message}`,
           confirmButtonColor: '#FACC15',
         });
       }
     }
   };
 
-  // ✅ Tambahkan fungsi handleSelesaikan
   const handleSelesaikan = async (id) => {
+    // const result = window.confirm("Yakin ingin menyelesaikan kegiatan ini?"); // ❌ GANTI INI
     const result = await Swal.fire({
       title: 'Yakin ingin menyelesaikan kegiatan ini?',
-      text: 'Kegiatan akan diubah menjadi laporan dan tidak akan muncul di daftar agenda.',
+      text: "Kegiatan akan diubah menjadi laporan dan tidak akan muncul di daftar agenda.",
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#FACC15',
@@ -95,18 +109,36 @@ export default function KegiatanAdmin() {
       try {
         const token = localStorage.getItem('auth_token');
         const res = await fetch(`/api/admin/kegiatans/${id}/selesaikan`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
+          method: 'PUT', // Gunakan PUT atau POST sesuai endpoint Anda
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          // body: JSON.stringify({}), // Jika diperlukan
         });
-        if (!res.ok) throw new Error('Gagal menyelesaikan kegiatan');
+
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.message || 'Gagal menyelesaikan kegiatan.');
+        }
+
         const updatedKegiatan = await res.json();
-        setKegiatans(kegiatans.map(k => k.id === id ? updatedKegiatan : k));
-        Swal.fire('Berhasil!', 'Kegiatan telah diselesaikan.', 'success');
+        setKegiatans(kegiatans.map(k => k.id === id ? updatedKegiatan.data : k));
+        // alert('Kegiatan berhasil diselesaikan.'); // ❌ GANTI INI
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil!',
+          text: 'Kegiatan berhasil diselesaikan.',
+          confirmButtonColor: '#FACC15',
+        });
       } catch (err) {
+        console.error('Gagal menyelesaikan kegiatan:', err);
+        // alert(`Gagal menyelesaikan kegiatan: ${err.message}`); // ❌ GANTI INI
         Swal.fire({
           icon: 'error',
           title: 'Gagal',
-          text: 'Tidak dapat menyelesaikan kegiatan: ' + err.message,
+          text: `Gagal menyelesaikan kegiatan: ${err.message}`,
           confirmButtonColor: '#FACC15',
         });
       }
@@ -114,142 +146,141 @@ export default function KegiatanAdmin() {
   };
 
   if (!admin) {
-    return <div className="min-h-screen flex items-center justify-center">Memuat...</div>;
+    return <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center">Memuat...</div>;
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex gap-8">
-          <div className="w-64">
-            <AdminSidebar admin={admin} />
-          </div>
-          <div className="flex-1">
-            <Card className="border-0 shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <div>
-                    <h1 className="text-2xl font-bold text-[#374151]">Kelola Kegiatan</h1>
-                    <p className="text-[#6B7280]">Daftar kegiatan SKK Community.</p>
-                  </div>
-                  <Button
-                    asChild
-                    className="bg-[#FACC15] text-black hover:bg-[#EAB308] font-semibold"
-                  >
-                    <Link to="/admin/kegiatans/tambah">
-                      <Plus size={16} className="mr-1" />
-                      Tambah Kegiatan
-                    </Link>
-                  </Button>
-                </div>
+  const formatTanggal = (tanggal) => {
+    if (!tanggal) return '-';
+    return new Date(tanggal).toLocaleDateString('id-ID');
+  };
 
-                {loading ? (
-                  <div className="text-center py-8">Memuat...</div>
-                ) : kegiatans.length === 0 ? (
-                  <div className="text-center py-8 text-[#6B7280]">Belum ada kegiatan.</div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {kegiatans.map((kegiatan) => (
-                      <Card key={kegiatan.id} className="border-0 shadow-sm rounded-lg overflow-hidden">
-                        <CardContent className="p-4">
-                          {kegiatan.gambar ? (
-                            <>
-                              {console.log('Gambar URL:', kegiatan.gambar)} {/* Debug log */}
+  return (
+    <>
+      <div className="min-h-screen bg-[#F9FAFB]">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex gap-8">
+            <div className="w-64">
+              <AdminSidebar admin={admin} />
+            </div>
+            <div className="flex-1">
+              <Card className="border-0 shadow-lg bg-white">
+                <CardHeader>
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                    <div>
+                      <CardTitle className="text-2xl font-bold text-[#374151]">Kelola Kegiatan</CardTitle>
+                      <p className="text-[#6B7280]">Daftar kegiatan SKK Community.</p>
+                    </div>
+                    <Button
+                      asChild
+                      className="bg-[#FACC15] hover:bg-[#e0b70a] text-black font-semibold shadow-md hover:shadow-lg transition-shadow"
+                    >
+                      <Link to="/admin/kegiatans/tambah">
+                        <Plus size={16} className="mr-2" />
+                        Tambah Kegiatan
+                      </Link>
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {loading ? (
+                    <div className="text-center py-8 text-[#6B7280]">Memuat kegiatan...</div>
+                  ) : kegiatans.length === 0 ? (
+                    <div className="text-center py-8 text-[#6B7280]">
+                      <Target size={48} className="mx-auto mb-4 text-[#FACC15]" />
+                      <p>Belum ada kegiatan.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {kegiatans.map((kegiatan) => (
+                        <Card key={kegiatan.id} className="border-0 shadow-sm hover:shadow-md transition-shadow bg-white border border-[#FEF9C3] flex flex-col">
+                          <CardContent className="p-4 flex-grow flex flex-col">
+                            {kegiatan.gambar ? (
                               <img
-                                src={kegiatan.gambar.replace('http://', 'https://')}  // Force HTTPS
+                                src={kegiatan.gambar}
                                 alt={kegiatan.judul}
                                 className="w-full h-40 object-cover rounded-md mb-3"
-                                crossOrigin="anonymous"  // Tambahkan ini
-                                referrerPolicy="no-referrer"
                                 onError={(e) => {
-                                  console.log('Image failed to load:', kegiatan.gambar);
-                                  e.target.src = `https://placehold.co/400x200/FACC15/white?text=${encodeURIComponent(kegiatan.judul.substring(0, 15))}`;
-                                  e.target.onerror = null;
+                                  e.target.style.display = 'none';
+                                  e.target.nextSibling.style.display = 'flex';
                                 }}
                               />
-                            </>
-                          ) : (
-                            <div className="w-full h-40 bg-[#FACC15]/20 rounded-md flex items-center justify-center">
-                              <span className="text-xs text-white">Tanpa Gambar</span>
-                            </div>
-                          )}
-
-                          {/* Judul */}
-                          <h3 className="font-bold text-[#374151] line-clamp-2">{kegiatan.judul}</h3>
-
-                          {/* Lokasi */}
-                          <p className="text-sm text-[#6B7280] mt-1 line-clamp-1">{kegiatan.lokasi || '—'}</p>
-
-                          {/* Tanggal */}
-                          <p className="text-xs text-[#6B7280] mt-1">
-                            {new Date(kegiatan.tanggal_mulai).toLocaleDateString('id-ID')}
-                            {kegiatan.tanggal_selesai && (
-                              <> → {new Date(kegiatan.tanggal_selesai).toLocaleDateString('id-ID')}</>
+                            ) : (
+                              <div className="w-full h-40 bg-[#FEF9C3] rounded-md flex items-center justify-center">
+                                <span className="text-xs text-[#6B7280]">Tanpa Gambar</span>
+                              </div>
                             )}
-                          </p>
-
-                          {/* Tombol Aksi */}
-                          <div className="mt-4 flex flex-wrap gap-2">
-                            {/* Edit */}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              asChild
-                              className="border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3] text-xs px-3 py-1"
-                            >
-                              <Link to={`/admin/kegiatans/${kegiatan.id}/edit`}>
-                                <Edit size={14} className="mr-1" />
-                                Edit
-                              </Link>
-                            </Button>
-
-                            {/* Selesaikan (hanya untuk agenda) */}
-                            {kegiatan.tipe === 'agenda' && (
+                            <h3 className="font-bold text-[#374151] line-clamp-2">{kegiatan.judul}</h3>
+                            <p className="text-sm text-[#6B7280] mt-1 line-clamp-1">{kegiatan.lokasi || '—'}</p>
+                            <p className="text-xs text-[#6B7280] mt-1">
+                              {formatTanggal(kegiatan.tanggal_mulai)} → {formatTanggal(kegiatan.tanggal_selesai)}
+                            </p>
+                            <div className="mt-3 flex items-center gap-2 text-xs">
+                              <Badge variant={kegiatan.tipe === 'agenda' ? 'default' : 'secondary'} className="capitalize">
+                                {kegiatan.tipe}
+                              </Badge>
+                              <Badge variant={kegiatan.is_active ? 'default' : 'secondary'}>
+                                {kegiatan.is_active ? 'Aktif' : 'Tidak Aktif'}
+                              </Badge>
+                            </div>
+                            <div className="mt-4 flex flex-wrap gap-2">
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleSelesaikan(kegiatan.id)}
-                                className="border-[#FDE68A] text-blue-600 hover:bg-blue-50 text-xs px-3 py-1"
+                                asChild
+                                className="border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3] text-xs px-2 py-1"
                               >
-                                <CheckCircle size={14} className="mr-1" />
-                                Selesaikan
+                                <Link to={`/admin/kegiatans/${kegiatan.id}/edit`}>
+                                  <Edit size={14} className="mr-1" />
+                                  Edit
+                                </Link>
                               </Button>
-                            )}
 
-                            {/* Lihat Peserta */}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              asChild
-                              className="border-[#FDE68A] text-purple-600 hover:bg-purple-50 text-xs px-3 py-1"
-                            >
-                              <Link to={`/admin/kegiatans/${kegiatan.id}/peserta`}>
-                                <Users size={14} className="mr-1" />
-                                Lihat Peserta
-                              </Link>
-                            </Button>
+                              {kegiatan.tipe === 'agenda' && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleSelesaikan(kegiatan.id)}
+                                  className="border-[#FDE68A] text-blue-600 hover:bg-blue-50 text-xs px-2 py-1"
+                                >
+                                  <CheckCircle size={14} className="mr-1" />
+                                  Selesaikan
+                                </Button>
+                              )}
 
-                            {/* Hapus */}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDelete(kegiatan.id)}
-                              className="border-[#FDE68A] text-red-500 hover:bg-red-50 text-xs px-3 py-1"
-                            >
-                              <Trash2 size={14} className="mr-1" />
-                              Hapus
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                asChild
+                                className="border-[#FDE68A] text-purple-600 hover:bg-purple-50 text-xs px-2 py-1"
+                              >
+                                <Link to={`/admin/kegiatans/${kegiatan.id}/peserta`}>
+                                  <Users size={14} className="mr-1" />
+                                  Peserta
+                                </Link>
+                              </Button>
+
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDelete(kegiatan.id)}
+                                className="border-[#FDE68A] text-red-500 hover:bg-red-50 text-xs px-2 py-1"
+                              >
+                                <Trash2 size={14} className="mr-1" />
+                                Hapus
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 }

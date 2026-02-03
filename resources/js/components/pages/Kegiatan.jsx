@@ -8,10 +8,9 @@ import NavbarAfter from '@/components/shared/NavbarAfter';
 import Footer from '@/components/shared/Footer';
 
 export default function Kegiatan() {
-  const [kegiatans, setKegiatans] = useState([]); // ✅ Ganti nama state
+  const [kegiatans, setKegiatans] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Cek apakah user sudah login
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   if (!user.id) {
     window.location.href = '/';
@@ -19,14 +18,14 @@ export default function Kegiatan() {
   }
 
   useEffect(() => {
-    const fetchKegiatans = async () => { // ✅ Ganti nama fungsi
+    const fetchKegiatans = async () => {
       try {
         const token = localStorage.getItem('auth_token');
-        const res = await fetch('/api/kegiatans', { // ✅ Ganti ke /api/kegiatans (jamak)
+        const res = await fetch('/api/kegiatans', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('Gagal mengambil data kegiatan');
-        setKegiatans(await res.json()); // ✅ Ganti nama state
+        setKegiatans(await res.json());
       } catch (err) {
         console.error('Gagal ambil kegiatan:', err);
         alert('Gagal mengambil daftar kegiatan.');
@@ -39,7 +38,7 @@ export default function Kegiatan() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center">
         <div className="text-[#374151]">Memuat kegiatan...</div>
       </div>
     );
@@ -48,7 +47,7 @@ export default function Kegiatan() {
   return (
     <>
       <NavbarAfter />
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#F9FAFB]">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-[#374151]">Kegiatan SKK Community</h1>
@@ -56,18 +55,24 @@ export default function Kegiatan() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {kegiatans.map((kegiatan) => ( // ✅ Ganti ke `kegiatan`
-              <Card key={kegiatan.id} className="border-0 shadow-sm">
-                <CardContent className="p-4">
+            {kegiatans.map((kegiatan) => (
+              <Card key={kegiatan.id} className="border-0 shadow-sm bg-white border border-[#FEF9C3] flex flex-col">
+                <CardContent className="p-4 flex-grow flex flex-col">
                   {kegiatan.gambar && (
                     <img
                       src={kegiatan.gambar}
                       alt={kegiatan.judul}
                       className="w-full h-40 object-cover rounded-md mb-3"
                       onError={(e) => {
-                        e.target.src = `https://placehold.co/400x200/FACC15/white?text=${encodeURIComponent(kegiatan.judul.substring(0, 15))}`;
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
                       }}
                     />
+                  )}
+                  {!kegiatan.gambar && (
+                    <div className="w-full h-40 bg-[#FEF9C3] rounded-md mb-3 flex items-center justify-center">
+                      <Heart className="text-[#D1D5DB]" size={32} />
+                    </div>
                   )}
                   <h3 className="font-bold text-[#374151]">{kegiatan.judul}</h3>
                   <p className="text-sm text-[#6B7280] mt-1 line-clamp-2">{kegiatan.deskripsi}</p>
@@ -85,11 +90,11 @@ export default function Kegiatan() {
                     <span>{kegiatan.lokasi}</span>
                   </div>
                   
-                  <div className="mt-3">
-                    <span className={`inline-block px-2 py-1 rounded-full text-xs ${
+                  <div className="mt-3 mb-4">
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs ${
                       kegiatan.tipe === 'agenda'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-green-100 text-green-800'
+                        ? 'bg-[#FEF9C3] text-[#374151] border border-[#FDE68A]'
+                        : 'bg-[#FEF9C3] text-[#374151] border border-[#FDE68A]'
                     }`}>
                       {kegiatan.tipe === 'agenda' ? 'Agenda' : 'Laporan'}
                     </span>
@@ -98,7 +103,7 @@ export default function Kegiatan() {
                   <Button
                     variant="outline"
                     asChild
-                    className="w-full mt-4 border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3]"
+                    className="w-full mt-auto border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3]"
                   >
                     <Link to={`/kegiatan/${kegiatan.id}`}>Lihat Detail</Link>
                   </Button>
@@ -107,7 +112,7 @@ export default function Kegiatan() {
             ))}
           </div>
 
-          {kegiatans.length === 0 && ( // ✅ Ganti ke `kegiatans`
+          {kegiatans.length === 0 && (
             <div className="text-center py-12 text-[#6B7280]">
               <Calendar size={48} className="mx-auto mb-4 text-[#FACC15]" />
               <p>Belum ada kegiatan terbaru.</p>

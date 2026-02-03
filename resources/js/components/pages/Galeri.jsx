@@ -35,7 +35,7 @@ export default function Galeri() {
     return (
       <>
         <NavbarAfter />
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center">
           <div className="text-[#374151]">Memuat galeri album...</div>
         </div>
         <Footer />
@@ -51,7 +51,7 @@ export default function Galeri() {
   return (
     <>
       <NavbarAfter />
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#F9FAFB]">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-[#374151]">Galeri Album</h1>
@@ -66,7 +66,7 @@ export default function Galeri() {
                 placeholder="Cari album berdasarkan judul atau deskripsi..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-[#FDE68A] focus-visible:ring-[#FACC15]"
+                className="pl-10 border-[#FDE68A] focus-visible:ring-[#FACC15] focus-visible:ring-offset-0 rounded-lg"
               />
             </div>
           </div>
@@ -75,8 +75,8 @@ export default function Galeri() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredAlbums.length > 0 ? (
               filteredAlbums.map((album) => (
-                <Card key={album.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
-                  <CardContent className="p-0">
+                <Card key={album.id} className="border-0 shadow-sm hover:shadow-md transition-shadow bg-white border border-[#FEF9C3] flex flex-col">
+                  <CardContent className="p-0 flex-grow flex flex-col">
                     <div className="aspect-video overflow-hidden rounded-t-lg">
                       {album.gambar_cover ? (
                         <img
@@ -84,22 +84,23 @@ export default function Galeri() {
                           alt={album.judul}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(album.judul || 'Album')}&background=FACC15&color=ffffff`;
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
                           }}
                         />
                       ) : (
-                        <div className="w-full h-full bg-[#FDE68A] flex items-center justify-center">
+                        <div className="w-full h-full bg-[#FEF9C3] flex items-center justify-center">
                           <Camera size={32} className="text-[#FACC15]" />
                         </div>
                       )}
                     </div>
-                    <div className="p-4">
+                    <div className="p-4 flex-grow flex flex-col">
                       <h3 className="font-bold text-[#374151] truncate">{album.judul}</h3>
-                      <p className="text-sm text-[#6B7280] mt-1 line-clamp-2">
+                      <p className="text-sm text-[#6B7280] mt-1 line-clamp-2 flex-grow">
                         {album.deskripsi || 'Tidak ada deskripsi'}
                       </p>
                       
-                      <div className="mt-3 flex items-center justify-between">
+                      <div className="mt-3 flex items-center justify-between pt-2 border-t border-[#FEF9C3]">
                         <div className="text-xs text-[#6B7280]">
                           <div className="flex items-center gap-1">
                             <Calendar size={12} />
@@ -115,7 +116,7 @@ export default function Galeri() {
                           asChild
                           size="sm"
                           variant="outline"
-                          className="border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3]"
+                          className="border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3] px-3 py-1.5 text-sm"
                         >
                           <Link to={`/galeri/album/${album.id}`}>
                             <Eye size={14} className="mr-1" />

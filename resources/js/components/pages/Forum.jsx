@@ -34,7 +34,7 @@ export default function Forum() {
     return (
       <>
         <NavbarAfter />
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center">
           <div className="text-[#374151]">Memuat forum...</div>
         </div>
         <Footer />
@@ -45,13 +45,13 @@ export default function Forum() {
   return (
     <>
       <NavbarAfter />
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#F9FAFB]">
         <div className="container mx-auto px-4 py-8">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-[#374151]">Forum Diskusi</h1>
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+            <h1 className="text-2xl font-bold text-[#374151] mb-4 md:mb-0">Forum Diskusi</h1>
             <Button
               asChild
-              className="bg-[#FACC15] text-black hover:bg-[#EAB308] font-semibold"
+              className="bg-[#FACC15] text-black hover:bg-[#e0b70a] font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-shadow"
             >
               <Link to="/forum/tambah">
                 <MessageCircle size={16} className="mr-1" />
@@ -68,13 +68,13 @@ export default function Forum() {
               </div>
             ) : (
               topiks.map((topik) => (
-                <Card key={topik.id} className="border-0 shadow-sm">
+                <Card key={topik.id} className="border-0 shadow-sm bg-white border border-[#FEF9C3]">
                   <CardHeader>
                     <CardTitle className="text-[#374151]">{topik.judul}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-[#6B7280] mb-3">{topik.isi.substring(0, 100)}...</p>
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                       <div className="flex items-center gap-2 text-sm text-[#6B7280]">
                         <User size={14} />
                         <span>{topik.user?.full_name || 'Anonim'}</span>
@@ -84,7 +84,7 @@ export default function Forum() {
                       <Button
                         variant="outline"
                         asChild
-                        className="border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3]"
+                        className="border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3] px-4 py-2"
                       >
                         <Link to={`/forum/${topik.id}`}>
                           <MessageCircle size={14} className="mr-1" />

@@ -1,15 +1,17 @@
+// resources/js/pages/admin/DonasiAdmin.jsx
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Edit, Trash2, Users, CreditCard, Eye } from 'lucide-react'; // Tambahkan ikon Eye
+import { Search, Plus, Edit, Trash2, Users, CreditCard, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AdminSidebar from '@/components/shared/AdminSidebar';
 import Footer from '@/components/shared/Footer';
-import TambahKampanyeForm from './TambahKampanye'; // Pastikan path sesuai
-import EditKampanyeForm from './EditKampanye';    // Pastikan path sesuai
+import TambahKampanyeForm from './TambahKampanye';
+import EditKampanyeForm from './EditKampanye';
+import Swal from 'sweetalert2'; // ✅ Import SweetAlert2
 
 export default function DonasiAdmin() {
   const [admin, setAdmin] = useState(null);
@@ -44,13 +46,18 @@ export default function DonasiAdmin() {
       setKampanyes(data.data);
     } catch (err) {
       console.error(err);
-      alert('Gagal memuat kampanye donasi.');
+      // alert('Gagal memuat kampanye donasi.'); // ❌ GANTI INI
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal',
+        text: 'Gagal memuat kampanye donasi.',
+        confirmButtonColor: '#FACC15',
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle submit TAMBAH
   const handleTambahSubmit = async (formData) => {
     const token = localStorage.getItem('auth_token');
     const fd = new FormData();
@@ -73,16 +80,27 @@ export default function DonasiAdmin() {
         throw new Error(result.message || 'Gagal menyimpan.');
       }
 
-      alert(result.message);
+      // alert(result.message); // ❌ GANTI INI
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: result.message,
+        confirmButtonColor: '#FACC15',
+      });
       setShowTambah(false);
       setFormErrors({});
       fetchKampanyes();
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      // alert(`Error: ${err.message}`); // ❌ GANTI INI
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal',
+        text: `Error: ${err.message}`,
+        confirmButtonColor: '#FACC15',
+      });
     }
   };
 
-  // Handle submit EDIT
   const handleEditSubmit = async (formData) => {
     const token = localStorage.getItem('auth_token');
     const fd = new FormData();
@@ -106,33 +124,70 @@ export default function DonasiAdmin() {
         throw new Error(result.message || 'Gagal memperbarui.');
       }
 
-      alert(result.message);
+      // alert(result.message); // ❌ GANTI INI
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: result.message,
+        confirmButtonColor: '#FACC15',
+      });
       setShowEdit(false);
       setEditingKampanye(null);
       setFormErrors({});
       fetchKampanyes();
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      // alert(`Error: ${err.message}`); // ❌ GANTI INI
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal',
+        text: `Error: ${err.message}`,
+        confirmButtonColor: '#FACC15',
+      });
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Hapus kampanye ini? Semua transaksi terkait juga akan dihapus.')) return;
-    try {
-      const token = localStorage.getItem('auth_token');
-      const res = await fetch(`/api/admin/donasi-kampanye/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Gagal menghapus');
-      alert('Kampanye berhasil dihapus.');
-      fetchKampanyes();
-    } catch (err) {
-      alert('Gagal menghapus kampanye.');
+    // if (!confirm('Hapus kampanye ini? Semua transaksi terkait juga akan dihapus.')) return; // ❌ GANTI INI
+    const result = await Swal.fire({
+      title: 'Yakin ingin menghapus kampanye ini?',
+      text: "Semua transaksi terkait juga akan dihapus.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#FACC15',
+      cancelButtonColor: '#d1d5db',
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal',
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch(`/api/admin/donasi-kampanye/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error('Gagal menghapus');
+        // alert('Kampanye berhasil dihapus.'); // ❌ GANTI INI
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil!',
+          text: 'Kampanye berhasil dihapus.',
+          confirmButtonColor: '#FACC15',
+        });
+        fetchKampanyes();
+      } catch (err) {
+        // alert('Gagal menghapus kampanye.'); // ❌ GANTI INI
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal',
+          text: `Gagal menghapus kampanye: ${err.message}`,
+          confirmButtonColor: '#FACC15',
+        });
+      }
     }
   };
 
-  if (!admin) return <div className="min-h-screen flex items-center justify-center">Memuat...</div>;
+  if (!admin) return <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center">Memuat...</div>;
 
   const filtered = kampanyes.filter(k =>
     k.judul.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -143,7 +198,7 @@ export default function DonasiAdmin() {
 
   const getProgressPercentage = (total, target) => {
     if (!target || target === 0) return 0;
-    return Math.min(100, Math.round((total / target) * 100)); // Gunakan total dari backend
+    return Math.min(100, Math.round((total / target) * 100));
   };
 
   return (
@@ -155,9 +210,9 @@ export default function DonasiAdmin() {
               <AdminSidebar admin={admin} />
             </div>
             <div className="flex-1">
-              <Card className="border-0 shadow-sm bg-white">
+              <Card className="border-0 shadow-lg bg-white">
                 <CardHeader>
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                     <div>
                       <CardTitle className="text-2xl font-bold text-[#374151]">
                         Manajemen Kampanye Donasi
@@ -168,7 +223,7 @@ export default function DonasiAdmin() {
                       <DialogTrigger asChild>
                         <Button
                           onClick={() => setFormErrors({})}
-                          className="bg-[#FACC15] hover:bg-[#e0b70a] text-black"
+                          className="bg-[#FACC15] hover:bg-[#e0b70a] text-black font-semibold shadow-md hover:shadow-lg transition-shadow"
                         >
                           <Plus className="mr-2 h-4 w-4" /> Tambah Kampanye
                         </Button>
@@ -190,7 +245,7 @@ export default function DonasiAdmin() {
                         placeholder="Cari berdasarkan judul atau deskripsi..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 border-[#FDE68A]"
+                        className="pl-10 border-[#FDE68A] focus-visible:ring-[#FACC15] focus-visible:ring-offset-0 rounded-lg"
                       />
                     </div>
                   </div>
@@ -200,21 +255,25 @@ export default function DonasiAdmin() {
                   ) : filtered.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                       {filtered.map((k) => {
-                        const progress = getProgressPercentage(k.total_donasi || 0, k.target || 0); // Gunakan k.total_donasi
+                        const progress = getProgressPercentage(k.total_donasi || 0, k.target || 0);
                         return (
                           <Card
                             key={k.id}
-                            className="border border-[#E5E7EB] hover:shadow-md transition-shadow"
+                            className="border-0 shadow-sm hover:shadow-md transition-shadow bg-white border border-[#FEF9C3] flex flex-col"
                           >
-                            <div className="relative">
+                            <div className="relative pb-[56.25%] overflow-hidden rounded-t-lg">
                               {k.gambar ? (
                                 <img
                                   src={k.gambar}
                                   alt={k.judul}
-                                  className="w-full h-48 object-cover rounded-t-lg"
+                                  className="w-full h-full object-cover absolute inset-0"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                  }}
                                 />
                               ) : (
-                                <div className="w-full h-48 bg-[#F3F4F6] flex items-center justify-center rounded-t-lg">
+                                <div className="w-full h-full object-cover absolute inset-0 bg-[#FEF9C3] flex items-center justify-center">
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     className="h-12 w-12 text-[#9CA3AF]"
@@ -233,25 +292,25 @@ export default function DonasiAdmin() {
                               )}
                               <Badge
                                 variant={k.is_active ? 'default' : 'secondary'}
-                                className="absolute top-2 right-2 text-xs px-2 py-1"
+                                className="absolute top-2 right-2 text-xs px-2 py-1 bg-[#FACC15] text-black border border-[#FDE68A]"
                               >
                                 {k.is_active ? 'Aktif' : 'Non-Aktif'}
                               </Badge>
                             </div>
-                            <CardContent className="pt-4 space-y-3">
+                            <CardContent className="p-4 flex-grow flex flex-col">
                               <h3 className="font-semibold text-[#374151] text-lg line-clamp-2">
                                 {k.judul}
                               </h3>
-                              <p className="text-[#6B7280] text-sm line-clamp-2">
+                              <p className="text-[#6B7280] text-sm mt-1 line-clamp-2 flex-grow">
                                 {k.deskripsi || '-'}
                               </p>
 
                               {/* Progress Donasi */}
                               {k.target && (
-                                <div className="space-y-1">
+                                <div className="space-y-1 mt-3">
                                   <div className="flex justify-between text-xs text-[#6B7280]">
                                     <span>
-                                      {formatRupiah(k.total_donasi || 0)} dari{' '} {/* Gunakan k.total_donasi */}
+                                      {formatRupiah(k.total_donasi || 0)} dari{' '}
                                       {formatRupiah(k.target)}
                                     </span>
                                     <span>{progress}%</span>
@@ -263,7 +322,7 @@ export default function DonasiAdmin() {
                                           ? 'bg-green-500'
                                           : progress >= 50
                                           ? 'bg-yellow-500'
-                                          : 'bg-blue-500'
+                                          : 'bg-[#FACC15]'
                                       }`}
                                       style={{ width: `${progress}%` }}
                                     ></div>
@@ -272,26 +331,25 @@ export default function DonasiAdmin() {
                               )}
 
                               {/* Aksi */}
-                              <div className="flex flex-wrap gap-2 pt-3">
+                              <div className="mt-4 flex flex-wrap gap-2">
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   onClick={() => navigate(`/admin/donasi/kampanye/${k.id}`)}
-                                  className="border-[#FDE68A] text-[#374151] text-xs"
+                                  className="border-[#FDE68A] text-[#374151] text-xs hover:bg-[#FEF9C3] flex items-center gap-1 px-2 py-1"
                                 >
-                                  <Users className="w-3 h-3 mr-1" /> Peserta
+                                  <Users className="w-3 h-3" /> Detail
                                 </Button>
 
-                                {/* 🔹 Tombol Lihat Transaksi */}
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   onClick={() =>
                                     navigate(`/admin/donasi/kampanye/${k.id}/transaksi`)
                                   }
-                                  className="border-[#FDE68A] text-[#374151] text-xs"
+                                  className="border-[#FDE68A] text-[#374151] text-xs hover:bg-[#FEF9C3] flex items-center gap-1 px-2 py-1"
                                 >
-                                  <CreditCard className="w-3 h-3 mr-1" /> Transaksi
+                                  <CreditCard className="w-3 h-3" /> Transaksi
                                 </Button>
 
                                 <Button
@@ -302,18 +360,18 @@ export default function DonasiAdmin() {
                                     setFormErrors({});
                                     setShowEdit(true);
                                   }}
-                                  className="border-[#FDE68A] text-[#374151] text-xs"
+                                  className="border-[#FDE68A] text-[#374151] text-xs hover:bg-[#FEF9C3] flex items-center gap-1 px-2 py-1"
                                 >
-                                  <Edit className="w-3 h-3 mr-1" /> Edit
+                                  <Edit className="w-3 h-3" /> Edit
                                 </Button>
 
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   onClick={() => handleDelete(k.id)}
-                                  className="border-red-300 text-red-600 hover:bg-red-50 text-xs"
+                                  className="border-red-300 text-red-600 hover:bg-red-50 text-xs flex items-center gap-1 px-2 py-1"
                                 >
-                                  <Trash2 className="w-3 h-3 mr-1" /> Hapus
+                                  <Trash2 className="w-3 h-3" /> Hapus
                                 </Button>
                               </div>
                             </CardContent>
@@ -334,7 +392,6 @@ export default function DonasiAdmin() {
       </div>
       <Footer />
 
-      {/* Dialog Edit */}
       {editingKampanye && (
         <EditKampanyeForm
           open={showEdit}

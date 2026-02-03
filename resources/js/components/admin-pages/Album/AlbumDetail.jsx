@@ -1,4 +1,4 @@
-// resources/js/components/admin-pages/Album/AlbumDetailPage.jsx
+// resources/js/pages/admin/AlbumDetail.jsx
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Search, Camera, User, Calendar, Trash2, Plus, Eye } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import AdminSidebar from '@/components/shared/AdminSidebar';
-import Swal from 'sweetalert2';
+import Footer from '@/components/shared/Footer';
+import Swal from 'sweetalert2'; // ✅ Import SweetAlert2
 
 export default function AlbumDetail() {
   const { albumId } = useParams();
@@ -31,11 +32,12 @@ export default function AlbumDetail() {
     setLoading(true);
     try {
       const token = localStorage.getItem('auth_token');
-      
+
       // Ambil detail album
       const albumRes = await fetch(`/api/admin/albums/${albumId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      if (!albumRes.ok) throw new Error('Gagal mengambil data album');
       const albumData = await albumRes.json();
       setAlbum(albumData);
 
@@ -43,22 +45,26 @@ export default function AlbumDetail() {
       const fotosRes = await fetch(`/api/admin/albums/${albumId}/fotos`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      if (!fotosRes.ok) throw new Error('Gagal mengambil data foto');
       const fotosData = await fotosRes.json();
       setFotos(fotosData);
     } catch (err) {
       console.error('Gagal mengambil album dan foto:', err);
+      // alert(`Gagal mengambil album dan foto: ${err.message}`); // ❌ GANTI INI
       Swal.fire({
         icon: 'error',
         title: 'Gagal',
-        text: 'Tidak dapat memuat album dan foto.',
+        text: `Gagal mengambil album dan foto: ${err.message}`,
         confirmButtonColor: '#FACC15',
       });
+      navigate('/admin/albums'); // Kembali jika error
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteFoto = async (id) => {
+    // const result = window.confirm('Yakin ingin menghapus foto ini?'); // ❌ GANTI INI
     const result = await Swal.fire({
       title: 'Yakin ingin menghapus foto ini?',
       text: 'Foto akan dihapus permanen dari database dan Cloudinary.',
@@ -79,12 +85,20 @@ export default function AlbumDetail() {
         });
         if (!res.ok) throw new Error('Gagal menghapus dari server');
         setFotos(fotos.filter(foto => foto.id !== id));
-        Swal.fire('Berhasil!', 'Foto berhasil dihapus.', 'success');
+        // alert('Foto berhasil dihapus.'); // ❌ GANTI INI
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil!',
+          text: 'Foto berhasil dihapus.',
+          confirmButtonColor: '#FACC15',
+        });
       } catch (err) {
+        console.error('Gagal menghapus foto:', err);
+        // alert(`Gagal menghapus foto: ${err.message}`); // ❌ GANTI INI
         Swal.fire({
           icon: 'error',
           title: 'Gagal',
-          text: 'Tidak dapat menghapus foto: ' + err.message,
+          text: `Gagal menghapus foto: ${err.message}`,
           confirmButtonColor: '#FACC15',
         });
       }
@@ -92,30 +106,33 @@ export default function AlbumDetail() {
   };
 
   if (!admin) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Memuat...</div>;
+    return <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center">Memuat...</div>; // Ganti warna latar belakang
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex gap-8">
-            <div className="w-64">
-              <AdminSidebar admin={admin} />
-            </div>
-            <div className="flex-1">
-              <Card className="border-0 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-2xl text-[#374151]">Detail Album</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-[#374151]">Memuat album dan foto...</div>
-                </CardContent>
-              </Card>
+      <>
+        <div className="min-h-screen bg-[#F9FAFB]">
+          <div className="container mx-auto px-4 py-8">
+            <div className="flex gap-8">
+              <div className="w-64">
+                <AdminSidebar admin={admin} />
+              </div>
+              <div className="flex-1">
+                <Card className="border-0 shadow-sm bg-white"> {/* Gaya card */}
+                  <CardHeader>
+                    <CardTitle className="text-2xl text-[#374151]">Detail Album</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-[#374151]">Memuat album dan foto...</div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+        <Footer />
+      </>
     );
   }
 
@@ -125,122 +142,133 @@ export default function AlbumDetail() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex gap-8">
-          {/* Sidebar */}
-          <div className="w-64">
-            <AdminSidebar admin={admin} />
-          </div>
+    <>
+      <div className="min-h-screen bg-[#F9FAFB]"> {/* Ganti warna latar belakang */}
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex gap-8">
+            {/* Sidebar */}
+            <div className="w-64">
+              <AdminSidebar admin={admin} />
+            </div>
 
-          {/* Konten Utama */}
-          <div className="flex-1">
-            <Card className="border-0 shadow-sm">
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle className="text-2xl text-[#374151]">Album: {album?.judul}</CardTitle>
-                    <p className="text-[#6B7280]">
-                      {album?.tanggal_pembuatan ? new Date(album.tanggal_pembuatan).toLocaleDateString('id-ID') : 'Tidak ada tanggal'} • {fotos.length} foto
-                    </p>
-                  </div>
-                  <Button
-                    asChild
-                    className="bg-[#FACC15] text-black hover:bg-[#EAB308] font-semibold"
-                  >
-                    <Link to={`/admin/albums/${albumId}/upload`}>
-                      <Plus size={16} className="mr-1" />
-                      Tambah Foto
-                    </Link>
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {/* Search Bar */}
-                <div className="mb-6">
-                  <div className="relative">
-                    <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]" />
-                    <Input
-                      placeholder="Cari foto berdasarkan judul atau deskripsi..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 border-[#FDE68A] focus-visible:ring-[#FACC15]"
-                    />
-                  </div>
-                </div>
-
-                {/* Fotos Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {filteredFotos.length > 0 ? (
-                    filteredFotos.map((foto) => (
-                      <Card key={foto.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
-                        <CardContent className="p-0">
-                          <div className="aspect-square overflow-hidden rounded-t-lg relative">
-                            <img
-                              src={foto.gambar}
-                              alt={foto.judul}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(foto.judul || 'Foto')}&background=FACC15&color=ffffff`;
-                              }}
-                            />
-                            <div className="absolute top-2 right-2">
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                onClick={() => handleDeleteFoto(foto.id)}
-                                className="bg-red-500 hover:bg-red-600 text-white p-1 h-6 w-6"
-                              >
-                                <Trash2 size={12} />
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="p-4">
-                            <h3 className="font-bold text-[#374151] truncate">{foto.judul}</h3>
-                            <p className="text-sm text-[#6B7280] mt-1 line-clamp-2">
-                              {foto.deskripsi || 'Tidak ada deskripsi'}
-                            </p>
-                            <div className="mt-2 flex items-center gap-1 text-xs text-[#6B7280]">
-                              <User size={12} />
-                              <span>oleh {foto.user?.full_name || 'Admin'}</span>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  ) : (
-                    <div className="col-span-full text-center py-12 text-[#6B7280]">
-                      <Camera size={48} className="mx-auto mb-4 text-[#FACC15]" />
-                      <p>Belum ada foto dalam album ini.</p>
-                      <Button
-                        asChild
-                        variant="outline"
-                        className="mt-4 border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3]"
-                      >
-                        <Link to={`/admin/albums/${albumId}/upload`}>
-                          Tambah Foto Pertama
-                        </Link>
-                      </Button>
+            {/* Konten Utama */}
+            <div className="flex-1">
+              <Card className="border-0 shadow-lg bg-white"> {/* Gaya card */}
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle className="text-2xl text-[#374151] font-bold">Album: {album?.judul}</CardTitle>
+                      <p className="text-[#6B7280]">
+                        {album?.tanggal_pembuatan ? new Date(album.tanggal_pembuatan).toLocaleDateString('id-ID') : 'Tidak ada tanggal'} • {fotos.length} foto
+                      </p>
                     </div>
-                  )}
-                </div>
+                    <Button
+                      asChild
+                      className="bg-[#FACC15] hover:bg-[#e0b70a] text-black font-semibold shadow-md hover:shadow-lg transition-shadow" // Gaya button
+                    >
+                      <Link to={`/admin/albums/${albumId}/upload`}>
+                        <Plus size={16} className="mr-2" />
+                        Tambah Foto
+                      </Link>
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {/* Search Bar */}
+                  <div className="mb-6">
+                    <div className="relative">
+                      <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]" />
+                      <Input
+                        placeholder="Cari foto berdasarkan judul atau deskripsi..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 border-[#FDE68A] focus-visible:ring-[#FACC15] focus-visible:ring-offset-0 rounded-lg" // Gaya input
+                      />
+                    </div>
+                  </div>
 
-                <div className="mt-6">
-                  <Button
-                    variant="outline"
-                    asChild
-                    className="border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3]"
-                  >
-                    <Link to="/admin/galeris">
-                      ← Kembali ke Semua Album
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                  {/* Fotos Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {filteredFotos.length > 0 ? (
+                      filteredFotos.map((foto) => (
+                        <Card key={foto.id} className="border-0 shadow-sm hover:shadow-md transition-shadow bg-white border border-[#FEF9C3] flex flex-col"> {/* Gaya card */}
+                          <CardContent className="p-0 flex-grow flex flex-col">
+                            <div className="relative aspect-square overflow-hidden rounded-t-lg">
+                              <img
+                                src={foto.gambar}
+                                alt={foto.judul}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                  e.target.nextSibling.style.display = 'flex';
+                                }}
+                              />
+                              <div className="absolute top-2 right-2">
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleDeleteFoto(foto.id)}
+                                  className="p-1 h-6 w-6 bg-red-500 hover:bg-red-600 text-white rounded-full" // Gaya button hapus
+                                >
+                                  <Trash2 size={14} />
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="p-4 flex-grow flex flex-col">
+                              <h3 className="font-bold text-[#374151] truncate">{foto.judul}</h3>
+                              <p className="text-sm text-[#6B7280] mt-1 line-clamp-2 flex-grow">
+                                {foto.deskripsi || 'Tidak ada deskripsi'}
+                              </p>
+
+                              <div className="mt-3 flex items-center justify-between pt-2 border-t border-[#FEF9C3]">
+                                <div className="text-xs text-[#6B7280] flex items-center gap-1">
+                                  <User size={12} />
+                                  {foto.user?.full_name || 'Admin'}
+                                </div>
+                                <div className="text-xs text-[#6B7280] flex items-center gap-1">
+                                  <Calendar size={12} />
+                                  {new Date(foto.created_at).toLocaleDateString('id-ID')}
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    ) : (
+                      <div className="col-span-full text-center py-12">
+                        <Camera size={48} className="mx-auto mb-4 text-[#FACC15]" />
+                        <p>Belum ada foto dalam album ini.</p>
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="mt-4 border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3]" // Gaya button
+                        >
+                          <Link to={`/admin/albums/${albumId}/upload`}>
+                            Tambah Foto Pertama
+                          </Link>
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-6">
+                    <Button
+                      variant="outline"
+                      asChild
+                      className="border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3]" // Gaya button
+                    >
+                      <Link to="/admin/galeris">
+                        ← Kembali ke Daftar Album
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 }

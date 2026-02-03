@@ -7,6 +7,7 @@ import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminSidebar from '@/components/shared/AdminSidebar';
 import Footer from '@/components/shared/Footer';
+import Swal from 'sweetalert2'; // ✅ Import SweetAlert2
 
 export default function KampanyeDetail() {
   const [admin, setAdmin] = useState(null);
@@ -36,7 +37,13 @@ export default function KampanyeDetail() {
       const data = await res.json();
       setKampanye(data.data);
     } catch (err) {
-      alert('Gagal memuat detail kampanye.');
+      // alert('Gagal memuat detail kampanye.'); // ❌ GANTI INI
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal',
+        text: 'Gagal memuat detail kampanye.',
+        confirmButtonColor: '#FACC15',
+      });
       navigate('/admin/donasis');
     } finally {
       setLoading(false);
@@ -44,23 +51,48 @@ export default function KampanyeDetail() {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Yakin hapus kampanye ini?')) return;
-    try {
-      const token = localStorage.getItem('auth_token');
-      const res = await fetch(`/api/admin/donasi-kampanye/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Gagal menghapus');
-      alert('Kampanye berhasil dihapus.');
-      navigate('/admin/donasis');
-    } catch (err) {
-      alert('Gagal menghapus kampanye.');
+    // if (!confirm('Yakin hapus kampanye ini?')) return; // ❌ GANTI INI
+    const result = await Swal.fire({
+      title: 'Yakin ingin menghapus kampanye ini?',
+      text: "Semua transaksi terkait juga akan dihapus.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#FACC15',
+      cancelButtonColor: '#d1d5db',
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal',
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch(`/api/admin/donasi-kampanye/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error('Gagal menghapus');
+        // alert('Kampanye berhasil dihapus.'); // ❌ GANTI INI
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil!',
+          text: 'Kampanye berhasil dihapus.',
+          confirmButtonColor: '#FACC15',
+        });
+        navigate('/admin/donasis');
+      } catch (err) {
+        // alert('Gagal menghapus kampanye.'); // ❌ GANTI INI
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal',
+          text: `Gagal menghapus kampanye: ${err.message}`,
+          confirmButtonColor: '#FACC15',
+        });
+      }
     }
   };
 
   if (!admin || loading) {
-    return <div className="min-h-screen flex items-center justify-center">Memuat...</div>;
+    return <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center">Memuat...</div>;
   }
 
   const formatRupiah = (num) => num ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(num) : '-';
@@ -124,14 +156,14 @@ export default function KampanyeDetail() {
                     <Button
                       onClick={() => navigate('/admin/donasis')}
                       variant="outline"
-                      className="border-[#FDE68A]"
+                      className="border-[#FDE68A] text-[#374151]"
                     >
                       Kembali ke Daftar
                     </Button>
                     <Button
-                      onClick={() => navigate(`/admin/donasis`)} // Bisa diarahkan ke form edit jika perlu
+                      onClick={() => navigate(`/admin/donasi/kampanye/${kampanye.id}/edit`)}
                       variant="outline"
-                      className="border-[#FDE68A]"
+                      className="border-[#FDE68A] text-[#374151]"
                     >
                       <Edit className="w-4 h-4 mr-2" /> Edit
                     </Button>

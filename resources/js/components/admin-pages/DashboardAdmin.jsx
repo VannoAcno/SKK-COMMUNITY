@@ -24,7 +24,7 @@ export default function DashboardAdmin() {
         totalDiskusi: 0,
         totalDonasi: 0,
     });
-    const [recentActivities, setRecentActivities] = useState([]);
+    // const [recentActivities, setRecentActivities] = useState([]);
     const [recentDonations, setRecentDonations] = useState([]);
     const navigate = useNavigate();
 
@@ -88,41 +88,41 @@ export default function DashboardAdmin() {
             });
 
             // --- PERBAIKAN: Ambil avatar dari user ---
-            const activities = [
-                ...usersData.slice(0, 2).map((user) => ({
-                    id: user.id,
-                    user: user.full_name,
-                    avatar: user.avatar,
-                    action: "mendaftar sebagai pengguna",
-                    time: new Date(user.created_at).toLocaleString("id-ID"),
-                    type: "user",
-                })),
-                ...kegiatanData.slice(0, 2).map((kegiatan) => {
-                    const user = kegiatan.user;
-                    return {
-                        id: kegiatan.id,
-                        user: user?.full_name || "Admin",
-                        avatar: user?.avatar,
-                        action: `membuat kegiatan "${kegiatan.judul}"`,
-                        time: new Date(kegiatan.created_at).toLocaleString("id-ID"),
-                        type: "kegiatan",
-                    };
-                }),
-                ...forumData.slice(0, 2).map((topik) => {
-                    return {
-                        id: topik.id,
-                        user: topik.user?.full_name || "Pengguna",
-                        avatar: topik.user?.avatar,
-                        action: `membuat diskusi "${topik.judul}"`,
-                        time: new Date(topik.created_at).toLocaleString("id-ID"),
-                        type: "diskusi",
-                    };
-                }),
-            ]
-                .sort((a, b) => new Date(b.time) - new Date(a.time))
-                .slice(0, 4);
+            // const activities = [
+            //     ...usersData.slice(0, 2).map((user) => ({
+            //         id: user.id,
+            //         user: user.full_name,
+            //         avatar: user.avatar,
+            //         action: "mendaftar sebagai pengguna",
+            //         time: new Date(user.created_at).toLocaleString("id-ID"),
+            //         type: "user",
+            //     })),
+            //     ...kegiatanData.slice(0, 2).map((kegiatan) => {
+            //         const user = kegiatan.user;
+            //         return {
+            //             id: kegiatan.id,
+            //             user: user?.full_name || "Admin",
+            //             avatar: user?.avatar,
+            //             action: `membuat kegiatan "${kegiatan.judul}"`,
+            //             time: new Date(kegiatan.created_at).toLocaleString("id-ID"),
+            //             type: "kegiatan",
+            //         };
+            //     }),
+            //     ...forumData.slice(0, 2).map((topik) => {
+            //         return {
+            //             id: topik.id,
+            //             user: topik.user?.full_name || "Pengguna",
+            //             avatar: topik.user?.avatar,
+            //             action: `membuat diskusi "${topik.judul}"`,
+            //             time: new Date(topik.created_at).toLocaleString("id-ID"),
+            //             type: "diskusi",
+            //         };
+            //     }),
+            // ]
+            //     .sort((a, b) => new Date(b.time) - new Date(a.time))
+            //     .slice(0, 4);
 
-            setRecentActivities(activities);
+            // setRecentActivities(activities);
 
             // Set recent donations (maksimal 3 terbaru)
             if (donasiData.success && donasiData.data) {
@@ -297,7 +297,7 @@ export default function DashboardAdmin() {
 
                                     {/* Aktivitas & Donasi */}
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                        {/* Aktivitas Terbaru */}
+                                        {/* <!-- Aktivitas Terbaru - DIKOMENTARI -->
                                         <Card className="border-0 shadow-sm">
                                             <CardContent className="p-6">
                                                 <div className="flex items-center gap-2 mb-4">
@@ -354,6 +354,7 @@ export default function DashboardAdmin() {
                                                 </div>
                                             </CardContent>
                                         </Card>
+                                        --> */}
 
                                         {/* Donasi Terbaru (DATA DARI BACKEND) */}
                                         <Card className="border-0 shadow-sm">

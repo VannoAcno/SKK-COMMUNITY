@@ -1,11 +1,12 @@
-// resources/js/components/admin-pages/Album/AdminAlbumsPage.jsx
+// resources/js/pages/admin/AlbumAdmin.jsx
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Camera, Calendar, Plus, Eye, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Search, Camera, Calendar, Plus, Eye, Trash2 } from 'lucide-react';
 import AdminSidebar from '@/components/shared/AdminSidebar';
+import Footer from '@/components/shared/Footer';
 import Swal from 'sweetalert2';
 
 export default function AlbumAdmin() {
@@ -39,7 +40,7 @@ export default function AlbumAdmin() {
       Swal.fire({
         icon: 'error',
         title: 'Gagal',
-        text: 'Tidak dapat memuat daftar album.',
+        text: `Gagal memuat daftar album: ${err.message}`,
         confirmButtonColor: '#FACC15',
       });
     } finally {
@@ -68,12 +69,17 @@ export default function AlbumAdmin() {
         });
         if (!res.ok) throw new Error('Gagal menghapus dari server');
         setAlbums(albums.filter(album => album.id !== id));
-        Swal.fire('Berhasil!', 'Album berhasil dihapus.', 'success');
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil!',
+          text: 'Album berhasil dihapus.',
+          confirmButtonColor: '#FACC15',
+        });
       } catch (err) {
         Swal.fire({
           icon: 'error',
           title: 'Gagal',
-          text: 'Tidak dapat menghapus album: ' + err.message,
+          text: `Gagal menghapus album: ${err.message}`,
           confirmButtonColor: '#FACC15',
         });
       }
@@ -81,7 +87,7 @@ export default function AlbumAdmin() {
   };
 
   if (!admin) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Memuat...</div>;
+    return <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center">Memuat...</div>;
   }
 
   const filteredAlbums = albums.filter(album =>
@@ -90,135 +96,142 @@ export default function AlbumAdmin() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex gap-8">
-          {/* Sidebar */}
-          <div className="w-64">
-            <AdminSidebar admin={admin} />
-          </div>
+    <>
+      <div className="min-h-screen bg-[#F9FAFB]">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex gap-8">
+            {/* Sidebar */}
+            <div className="w-64">
+              <AdminSidebar admin={admin} />
+            </div>
 
-          {/* Konten Utama */}
-          <div className="flex-1">
-            <Card className="border-0 shadow-sm">
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle className="text-2xl text-[#374151]">Manajemen Album</CardTitle>
-                    <p className="text-[#6B7280]">Kelola album dan foto-foto SKK.</p>
+            {/* Konten Utama */}
+            <div className="flex-1">
+              <Card className="border-0 shadow-lg bg-white rounded-xl overflow-hidden">
+                <CardHeader className="p-6">
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                    <div>
+                      <CardTitle className="text-2xl font-bold text-[#374151]">Manajemen Album</CardTitle>
+                      <p className="text-[#6B7280] mt-1">
+                        Kelola album dan foto-foto SKK Community.
+                      </p>
+                    </div>
+                    <Button
+                      asChild
+                      className="bg-[#FACC15] hover:bg-[#e0b70a] text-black font-semibold shadow-md hover:shadow-lg transition-all"
+                    >
+                      <Link to="/admin/albums/tambah">
+                        <Plus size={16} className="mr-2" />
+                        Tambah Album
+                      </Link>
+                    </Button>
                   </div>
-                  <Button
-                    asChild
-                    className="bg-[#FACC15] text-black hover:bg-[#EAB308] font-semibold"
-                  >
-                    <Link to="/admin/albums/tambah">
-                      <Plus size={16} className="mr-1" />
-                      Tambah Album
-                    </Link>
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
+                </CardHeader>
+
                 {/* Search Bar */}
-                <div className="mb-6">
-                  <div className="relative">
-                    <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]" />
-                    <Input
-                      placeholder="Cari album berdasarkan judul atau deskripsi..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 border-[#FDE68A] focus-visible:ring-[#FACC15]"
-                    />
+                <CardContent className="px-6 pb-6">
+                  <div className="mb-6">
+                    <div className="relative">
+                      <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]" />
+                      <Input
+                        placeholder="Cari album berdasarkan judul atau deskripsi..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 border-[#FDE68A] focus-visible:ring-[#FACC15] focus-visible:ring-offset-0 rounded-lg h-10"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                {/* Albums Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {filteredAlbums.length > 0 ? (
-                    filteredAlbums.map((album) => (
-                      <Card key={album.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
-                        <CardContent className="p-0">
-                          <div className="aspect-video overflow-hidden rounded-t-lg relative">
+                  {/* Albums Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {filteredAlbums.length > 0 ? (
+                      filteredAlbums.map((album) => (
+                        <Card
+                          key={album.id}
+                          className="border-0 shadow-sm hover:shadow-md transition-all duration-200 bg-white rounded-xl overflow-hidden flex flex-col"
+                        >
+                          {/* Cover Image */}
+                          <div className="relative aspect-[4/3] overflow-hidden">
                             {album.gambar_cover ? (
                               <img
                                 src={album.gambar_cover}
                                 alt={album.judul}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
-                                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(album.judul || 'Album')}&background=FACC15&color=ffffff`;
+                                  e.target.style.display = 'none';
+                                  e.target.nextSibling.style.display = 'flex';
                                 }}
                               />
                             ) : (
-                              <div className="w-full h-full bg-[#FDE68A] flex items-center justify-center">
-                                <Camera size={32} className="text-[#FACC15]" />
+                              <div className="w-full h-full bg-[#FEF9C3] flex items-center justify-center">
+                                <Camera size={48} className="text-[#9CA3AF]" />
                               </div>
                             )}
-                            <div className="absolute top-2 right-2 flex gap-1">
+                            <div className="absolute top-2 right-2 flex gap-2">
                               <Button
-                                size="sm"
-                                variant="secondary"
-                                onClick={() => handleDelete(album.id)}
-                                className="bg-red-500 hover:bg-red-600 text-white p-1 h-6 w-6"
-                              >
-                                <Trash2 size={12} />
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="p-4">
-                            <h3 className="font-bold text-[#374151] truncate">{album.judul}</h3>
-                            <p className="text-sm text-[#6B7280] mt-1 line-clamp-2">
-                              {album.deskripsi || 'Tidak ada deskripsi'}
-                            </p>
-                            
-                            <div className="mt-3 flex items-center justify-between">
-                              <div className="text-xs text-[#6B7280]">
-                                <div className="flex items-center gap-1">
-                                  <Calendar size={12} />
-                                  {album.tanggal_pembuatan ? new Date(album.tanggal_pembuatan).toLocaleDateString('id-ID') : 'Tidak ada tanggal'}
-                                </div>
-                                <div className="flex items-center gap-1 mt-1">
-                                  <Camera size={12} />
-                                  {album.fotos_count || 0} foto
-                                </div>
-                              </div>
-                              
-                              <Button
-                                asChild
                                 size="sm"
                                 variant="outline"
-                                className="border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3]"
+                                asChild
+                                className="border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3] p-1.5 h-8 w-8"
                               >
                                 <Link to={`/admin/albums/${album.id}`}>
-                                  <Eye size={14} className="mr-1" />
-                                  Detail
+                                  <Eye size={14} />
                                 </Link>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDelete(album.id)}
+                                className="border-red-300 text-red-500 hover:bg-red-50 p-1.5 h-8 w-8"
+                              >
+                                <Trash2 size={14} />
                               </Button>
                             </div>
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  ) : (
-                    <div className="col-span-full text-center py-12 text-[#6B7280]">
-                      <Camera size={48} className="mx-auto mb-4 text-[#FACC15]" />
-                      <p>Belum ada album yang dibuat.</p>
-                      <Button
-                        asChild
-                        variant="outline"
-                        className="mt-4 border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3]"
-                      >
-                        <Link to="/admin/albums/tambah">
-                          Buat Album Pertama
-                        </Link>
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+
+                          {/* Content */}
+                          <CardContent className="p-4 flex-grow flex flex-col">
+                            <h3 className="font-bold text-[#374151] text-lg line-clamp-1">{album.judul}</h3>
+                            <p className="text-[#6B7280] text-sm mt-2 line-clamp-2">
+                              {album.deskripsi || 'Tidak ada deskripsi.'}
+                            </p>
+
+                            <div className="mt-4 pt-4 border-t border-[#F3F4F6] flex flex-col gap-2">
+                              <div className="flex items-center text-xs text-[#6B7280]">
+                                <Calendar size={12} className="mr-2" />
+                                {album.tanggal_pembuatan
+                                  ? new Date(album.tanggal_pembuatan).toLocaleDateString('id-ID')
+                                  : 'Tidak ada tanggal'}
+                              </div>
+                              <div className="flex items-center text-xs text-[#6B7280]">
+                                <Camera size={12} className="mr-2" />
+                                {album.fotos_count || 0} foto
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    ) : (
+                      <div className="col-span-full text-center py-12">
+                        <Camera size={48} className="mx-auto mb-4 text-[#FACC15]" />
+                        <p className="text-[#6B7280] text-lg">Belum ada album yang dibuat.</p>
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="mt-4 border-[#FDE68A] text-[#374151] hover:bg-[#FEF9C3] px-6 py-2"
+                        >
+                          <Link to="/admin/albums/tambah">Buat Album Pertama</Link>
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 }

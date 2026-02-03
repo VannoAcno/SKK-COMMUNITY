@@ -1,3 +1,4 @@
+// resources/js/pages/Home.jsx
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +11,8 @@ export default function Home() {
   const navigate = useNavigate();
   const [renungan, setRenungan] = useState(null);
   const [agendas, setAgendas] = useState([]);
-  const [latestAlbum, setLatestAlbum] = useState(null); // 👈 Tambah state
+  const [latestAlbum, setLatestAlbum] = useState(null);
+  const [openDonations, setOpenDonations] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const userData = JSON.parse(localStorage.getItem('user') || '{}');
@@ -56,11 +58,7 @@ export default function Home() {
         setAgendas(agendasOnly);
       } catch (err) {
         console.error('Gagal mengambil agenda:', err);
-        setAgendas([
-          { id: 1, judul: 'Perayaan Paskah 2026', tanggal_mulai: '2026-04-05', lokasi: 'Gereja Katolik Paroki Santo Vincentius A Paulo, Widodaren Sawahan' },
-          { id: 2, judul: 'Ulang Tahun Vano', tanggal_mulai: '2026-07-11', lokasi: 'Menganti Palem Pertiwi' },
-          { id: 3, judul: 'Meet n Greet dengan wanita paling SETIA', tanggal_mulai: '2026-01-31', lokasi: 'Starstream' },
-        ]);
+        setAgendas([]);
       }
     };
 
@@ -76,15 +74,40 @@ export default function Home() {
         }
       } catch (err) {
         console.error('Gagal mengambil album terbaru:', err);
-        setLatestAlbum({
-          judul: 'Retret Pemuda 2025',
-          gambar_cover: 'https://via.placeholder.com/400x200?text=Retret+Pemuda+2025'
-        });
+        setLatestAlbum(null);
       }
     };
 
-    Promise.all([fetchRenunganHarian(), fetchAgendas(), fetchLatestAlbum()])
-      .finally(() => setLoading(false));
+    const fetchOpenDonations = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch('/api/donasi-kampanyes-aktif', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error(`Gagal mengambil kampanye donasi: ${res.status}`);
+        }
+
+        const data = await res.json();
+        const aktif = data.data.filter(k => k.is_active).slice(0, 3);
+        setOpenDonations(aktif);
+      } catch (err) {
+        console.error('Gagal mengambil donasi terbuka:', err);
+        setOpenDonations([]);
+      }
+    };
+
+    Promise.all([
+      fetchRenunganHarian(),
+      fetchAgendas(),
+      fetchLatestAlbum(),
+      fetchOpenDonations()
+    ]).finally(() => setLoading(false));
+
   }, []);
 
   const shortcuts = [
@@ -126,7 +149,7 @@ export default function Home() {
     return (
       <>
         <NavbarAfter />
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center">
           <div className="text-[#374151]">Memuat...</div>
         </div>
         <Footer />
@@ -134,13 +157,22 @@ export default function Home() {
     );
   }
 
+  const formatRupiah = (number) => {
+    if (!number) return 'Rp 0';
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(number);
+  };
+
   return (
     <>
       <NavbarAfter />
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#F9FAFB] font-sans">
         <main className="container mx-auto px-4 py-6">
           {/* Welcome Banner */}
-          <div className="bg-[#FEF9C3] rounded-xl p-6 mb-8">
+          <div className="bg-[#FEF9C3] rounded-xl p-6 mb-8 border border-[#FDE68A] shadow-sm">
             <h2 className="text-2xl font-bold text-[#374151] mb-2">
               Halo, {user.fullName}!
             </h2>
@@ -156,6 +188,7 @@ export default function Home() {
           <div className="mb-8">
             <Card className="border-0 shadow">
               <CardHeader>
+                {/* CardHeader hanya mengandung satu elemen utama, CardTitle */}
                 <CardTitle className="text-[#374151] flex items-center gap-2">
                   <Heart size={18} />
                   Renungan Hari Ini
@@ -192,13 +225,17 @@ export default function Home() {
                 <Link key={index} to={item.link}>
                   <Card className="hover:shadow-md transition-shadow border-0 h-full">
                     <CardHeader className="pb-2">
+                      {/* CardHeader hanya mengandung satu elemen utama */}
                       <div className={`${item.bg} w-12 h-12 rounded-full flex items-center justify-center ${item.color}`}>
                         <Icon size={24} />
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <CardTitle className="text-[#374151] text-lg mb-1">{item.title}</CardTitle>
-                      <p className="text-[#6B7280] text-sm">{item.description}</p>
+                      {/* CardContent hanya mengandung satu elemen utama */}
+                      <div>
+                        <CardTitle className="text-[#374151] text-lg mb-1">{item.title}</CardTitle>
+                        <p className="text-[#6B7280] text-sm">{item.description}</p>
+                      </div>
                     </CardContent>
                   </Card>
                 </Link>
@@ -211,6 +248,7 @@ export default function Home() {
             {/* Agenda Terdekat */}
             <Card className="border-0 shadow">
               <CardHeader>
+                 {/* CardHeader hanya mengandung satu elemen utama, CardTitle */}
                 <CardTitle className="text-[#374151]">Agenda Terdekat</CardTitle>
               </CardHeader>
               <CardContent>
@@ -227,9 +265,12 @@ export default function Home() {
                   ) : (
                     <p className="text-sm text-[#6B7280] italic">Belum ada agenda terdekat.</p>
                   )}
-                  <Button variant="link" asChild className="p-0 text-[#FACC15]">
-                    <Link to="/kegiatan">Lihat semua kegiatan</Link>
-                  </Button>
+                  {/* Bungkus Button dalam div jika perlu lebih dari satu elemen */}
+                  <div>
+                    <Button variant="link" asChild className="p-0 text-[#FACC15]">
+                      <Link to="/kegiatan">Lihat semua kegiatan</Link>
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -237,25 +278,43 @@ export default function Home() {
             {/* Donasi Terbuka */}
             <Card className="border-0 shadow">
               <CardHeader>
+                 {/* CardHeader hanya mengandung satu elemen utama, CardTitle */}
                 <CardTitle className="text-[#374151]">Donasi Terbuka</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
+                  {openDonations.length > 0 ? (
+                    openDonations.map((campaign) => (
+                      <div key={campaign.id}>
+                        <div className="font-medium">{campaign.judul}</div>
+                        <div className="text-sm text-[#6B7280]">
+                          Target: {formatRupiah(campaign.target)}
+                        </div>
+                        {/* Bungkus Button dalam div jika perlu lebih dari satu elemen */}
+                        <div>
+                           <Button variant="link" asChild className="p-0 text-[#FACC15] mt-1">
+                            <Link to={`/donasi/${campaign.id}`}>Dukung sekarang</Link>
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-[#6B7280] italic">Tidak ada kampanye donasi aktif saat ini.</p>
+                  )}
+                  {/* Bungkus Button dalam div jika perlu lebih dari satu elemen */}
                   <div>
-                    <div className="font-medium">Bantuan untuk Korban Banjir</div>
-                    <div className="text-sm text-[#6B7280]">Target: Rp 10.000.000</div>
-                    <div className="text-xs text-[#6B7280]">Terkumpul: Rp 6.500.000</div>
+                    <Button variant="link" asChild className="p-0 text-[#FACC15]">
+                      <Link to="/donasi">Lihat semua kampanye</Link>
+                    </Button>
                   </div>
-                  <Button variant="link" asChild className="p-0 text-[#FACC15]">
-                    <Link to="/donasi">Dukung sekarang</Link>
-                  </Button>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Galeri Terbaru — Diperbarui! */}
+            {/* Galeri Terbaru */}
             <Card className="border-0 shadow">
               <CardHeader>
+                 {/* CardHeader hanya mengandung satu elemen utama, CardTitle */}
                 <CardTitle className="text-[#374151]">Galeri Terbaru</CardTitle>
               </CardHeader>
               <CardContent>
@@ -279,9 +338,12 @@ export default function Home() {
                       </div>
                     </div>
                   )}
-                  <Button variant="link" asChild className="p-0 text-[#FACC15]">
-                    <Link to="/galeri">Lihat semua galeri</Link>
-                  </Button>
+                  {/* Bungkus Button dalam div jika perlu lebih dari satu elemen */}
+                  <div>
+                    <Button variant="link" asChild className="p-0 text-[#FACC15]">
+                      <Link to="/galeri">Lihat semua galeri</Link>
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
