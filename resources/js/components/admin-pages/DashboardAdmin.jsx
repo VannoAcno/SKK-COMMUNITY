@@ -183,7 +183,7 @@ export default function DashboardAdmin() {
             value: stats.totalDiskusi,
             icon: MessageCircle,
             color: "bg-[#8B5CF6]",
-            path: "/admin/forum",
+            path: "/admin/forums",
         },
         {
             title: "Total Donasi",
