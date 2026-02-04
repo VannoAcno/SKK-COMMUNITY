@@ -15,7 +15,7 @@ class KegiatanController extends Controller
     {
         try {
             $kegiatans = Kegiatan::with(['user:id,full_name,avatar'])
-                ->select('id', 'judul', 'deskripsi', 'tanggal_mulai', 'tanggal_selesai', 'lokasi', 'tipe', 'gambar', 'gambar_public_id', 'user_id', 'created_at')
+                ->select('id', 'judul', 'deskripsi', 'tanggal_mulai', 'tanggal_selesai', 'lokasi', 'tipe', 'gambar', 'gambar_public_id', 'user_id', 'is_active', 'created_at')
                 ->latest()
                 ->get();
 
@@ -35,6 +35,7 @@ class KegiatanController extends Controller
             'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
             'lokasi' => 'nullable|string|max:255',
             'tipe' => 'required|in:agenda,laporan',
+            'is_active' => 'sometimes|boolean',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -42,8 +43,9 @@ class KegiatanController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $data = $request->only(['judul', 'deskripsi', 'tanggal_mulai', 'tanggal_selesai', 'lokasi', 'tipe']);
+        $data = $request->only(['judul', 'deskripsi', 'tanggal_mulai', 'tanggal_selesai', 'lokasi', 'tipe', 'is_active']);
         $data['user_id'] = $request->user()->id;
+        $data['is_active'] = $request->has('is_active') ? (bool) $request->input('is_active') : true;
 
         if ($request->hasFile('gambar')) {
             $cloudName = env('CLOUDINARY_CLOUD_NAME');
@@ -57,7 +59,7 @@ class KegiatanController extends Controller
             $file = $request->file('gambar');
             $fileName = $file->getClientOriginalName();
 
-            // ✅ FIX: HAPUS SPASI BERLEBIH DI URL → TIDAK ADA SPASI SETELAH /v1_1/
+            // ✅ FIX: HAPUS SPASI BERLEBIH DI URL
             $response = Http::attach(
                 'file',
                 file_get_contents($file->getRealPath()),
@@ -96,70 +98,70 @@ class KegiatanController extends Controller
     }
 
     public function update(Request $request, Kegiatan $kegiatan)
-    {
-        $validator = Validator::make($request->all(), [
-            'judul' => 'required|string|max:255',
-            'deskripsi' => 'nullable|string',
-            'tanggal_mulai' => 'required|date',
-            'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
-            'lokasi' => 'nullable|string|max:255',
-            'tipe' => 'required|in:agenda,laporan',
-            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+{
+    $validator = Validator::make($request->all(), [
+        'judul' => 'required|string|max:255',
+        'deskripsi' => 'nullable|string',
+        'tanggal_mulai' => 'required|date',
+        'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
+        'lokasi' => 'nullable|string|max:255',
+        'tipe' => 'required|in:agenda,laporan',
+        'is_active' => 'nullable|boolean',
+        'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
+
+    // ✅ SOLUSI LANGSUNG: Set data tanpa is_active dulu
+    $data = $request->only(['judul', 'deskripsi', 'tanggal_mulai', 'tanggal_selesai', 'lokasi', 'tipe']);
+    
+    // ✅ SOLUSI LANGSUNG: Konversi is_active ke 0/1
+    $data['is_active'] = $request->input('is_active') == '1' ? 1 : 0;
+
+    if ($request->hasFile('gambar')) {
+        if ($kegiatan->gambar_public_id) {
+            $this->deleteOldImageFromCloudinary($kegiatan->gambar_public_id);
+        }
+
+        $cloudName = env('CLOUDINARY_CLOUD_NAME');
+        $uploadPreset = env('CLOUDINARY_UPLOAD_PRESET');
+
+        if (!$cloudName || !$uploadPreset) {
+            Log::error('Cloudinary credentials missing in .env');
+            return response()->json(['message' => 'Konfigurasi Cloudinary tidak lengkap'], 500);
+        }
+
+        $file = $request->file('gambar');
+
+        $response = Http::attach(
+            'file',
+            file_get_contents($file->getRealPath()),
+            $file->getClientOriginalName()
+        )->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/upload", [
+            'upload_preset' => $uploadPreset,
+            'folder' => 'cover-kegiatan',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $data = $request->only(['judul', 'deskripsi', 'tanggal_mulai', 'tanggal_selesai', 'lokasi', 'tipe']);
-
-        if ($request->hasFile('gambar')) {
-            if ($kegiatan->gambar_public_id) {
-                $this->deleteOldImageFromCloudinary($kegiatan->gambar_public_id);
-            }
-
-            $cloudName = env('CLOUDINARY_CLOUD_NAME');
-            $uploadPreset = env('CLOUDINARY_UPLOAD_PRESET');
-
-            if (!$cloudName || !$uploadPreset) {
-                Log::error('Cloudinary credentials missing in .env');
-                return response()->json(['message' => 'Konfigurasi Cloudinary tidak lengkap'], 500);
-            }
-
-            $file = $request->file('gambar');
-
-            // ✅ FIX: HAPUS SPASI BERLEBIH DI URL
-            $response = Http::attach(
-                'file',
-                file_get_contents($file->getRealPath()),
-                $file->getClientOriginalName()
-            )->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/upload", [
-                'upload_preset' => $uploadPreset,
-                'folder' => 'cover-kegiatan',
-            ]);
-
-            if ($response->successful()) {
-                $uploadResult = $response->json();
-                \Log::info('Cloudinary Update Upload Success', [
-                    'public_id' => $uploadResult['public_id'],
-                    'secure_url' => $uploadResult['secure_url'],
-                ]);
-                $data['gambar'] = $uploadResult['secure_url'];
-                $data['gambar_public_id'] = $uploadResult['public_id'];
-            } else {
-                Log::error('Cloudinary upload failed during update', $response->json());
-                return response()->json(['message' => 'Gagal upload gambar baru'], 500);
-            }
-        }
-
-        try {
-            $kegiatan->update($data);
-            return response()->json($kegiatan);
-        } catch (\Exception $e) {
-            Log::error('Failed to update kegiatan: ' . $e->getMessage());
-            return response()->json(['message' => 'Gagal memperbarui kegiatan'], 500);
+        if ($response->successful()) {
+            $uploadResult = $response->json();
+            $data['gambar'] = $uploadResult['secure_url'];
+            $data['gambar_public_id'] = $uploadResult['public_id'];
+        } else {
+            Log::error('Cloudinary upload failed during update', $response->json());
+            return response()->json(['message' => 'Gagal upload gambar baru'], 500);
         }
     }
+
+    try {
+        $kegiatan->update($data);
+        return response()->json($kegiatan);
+    } catch (\Exception $e) {
+        Log::error('Failed to update kegiatan: ' . $e->getMessage());
+        return response()->json(['message' => 'Gagal memperbarui kegiatan'], 500);
+    }
+}
 
     public function destroy(Kegiatan $kegiatan)
     {
@@ -212,13 +214,20 @@ class KegiatanController extends Controller
         }
     }
 
+    // ✅ FUNGSI SELESAIKAN YANG DIPERBAIKI
     public function selesaikan(Kegiatan $kegiatan)
     {
         if ($kegiatan->tipe !== 'agenda') {
             return response()->json(['message' => 'Hanya agenda yang bisa diselesaikan'], 400);
         }
 
-        $kegiatan->update(['tipe' => 'laporan']);
+        if (!$kegiatan->is_active) {
+            return response()->json(['message' => 'Kegiatan ini sudah diselesaikan'], 400);
+        }
+
+        // ✅ HANYA UBAH STATUS is_active MENJADI false, TIDAK MENGUBAH TIPE
+        $kegiatan->update(['is_active' => false]);
+        
         return response()->json($kegiatan);
     }
 

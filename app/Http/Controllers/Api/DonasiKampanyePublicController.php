@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\DonasiKampanye;
-use App\Models\Donasi; // Import model Donasi
+use App\Models\Donasi;
 use Illuminate\Http\Request;
 
 class DonasiKampanyePublicController extends Controller
@@ -17,10 +17,10 @@ class DonasiKampanyePublicController extends Controller
     {
         try {
             $kampanyes = DonasiKampanye::where('is_active', true)
-                ->withCount(['donasis as donasi_success_count' => function ($query) { // Hitung donasi success
+                ->withCount(['donasis as donasi_success_count' => function ($query) {
                     $query->where('status', 'success');
                 }])
-                ->withSum(['donasis as total_terkumpul' => function ($query) { // Jumlahkan nominal donasi success
+                ->withSum(['donasis as total_terkumpul' => function ($query) {
                     $query->where('status', 'success');
                 }], 'nominal')
                 ->orderBy('created_at', 'desc')
@@ -33,7 +33,7 @@ class DonasiKampanyePublicController extends Controller
                     'judul' => $kampanye->judul,
                     'deskripsi' => $kampanye->deskripsi,
                     'target' => $kampanye->target,
-                    'gambar' => $kampanye->gambar, // Gunakan accessor jika perlu
+                    'gambar' => $kampanye->gambar,
                     'is_active' => $kampanye->is_active,
                     'jumlah_donatur' => $kampanye->donasi_success_count,
                     'total_terkumpul' => $kampanye->total_terkumpul ?? 0,
@@ -71,12 +71,8 @@ class DonasiKampanyePublicController extends Controller
                 }], 'nominal')
                 ->findOrFail($id);
 
-            if (!$kampanye->is_active) {
-                 return response()->json([
-                     'success' => false,
-                     'message' => 'Kampanye tidak ditemukan atau tidak aktif.',
-                 ], 404);
-            }
+            // ✅ PERBAIKAN: TIDAK MENGEMBALIKAN 404 UNTUK KAMPANYE TIDAK AKTIF
+            // Biarkan frontend yang menentukan apakah kampanye bisa didonasi atau tidak
 
             $responseData = [
                 'id' => $kampanye->id,
@@ -84,7 +80,7 @@ class DonasiKampanyePublicController extends Controller
                 'deskripsi' => $kampanye->deskripsi,
                 'target' => $kampanye->target,
                 'gambar' => $kampanye->gambar,
-                'is_active' => $kampanye->is_active,
+                'is_active' => $kampanye->is_active, // ✅ Tetap kirim status
                 'jumlah_donatur' => $kampanye->donasi_success_count,
                 'total_terkumpul' => $kampanye->total_terkumpul ?? 0,
                 'created_at' => $kampanye->created_at,
@@ -94,7 +90,7 @@ class DonasiKampanyePublicController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Detail kampanye donasi berhasil diambil.',
-                'data' => $responseData,
+                'data' => $responseData, // ✅ Format respons yang benar
             ]);
         } catch (\Exception $e) {
             \Log::error('Gagal mengambil detail kampanye publik: ' . $e->getMessage());

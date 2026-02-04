@@ -1,4 +1,3 @@
-// resources/js/pages/donasi-flow/DonasiDetail.jsx
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import NavbarAfter from '@/components/shared/NavbarAfter';
 import Footer from '@/components/shared/Footer';
 
 export default function DonasiDetail() {
-  const { id } = useParams(); // ID kampanye dari URL
+  const { id } = useParams();
   const [user, setUser] = useState(null);
   const [kampanye, setKampanye] = useState(null);
   const [donasis, setDonasis] = useState([]);
@@ -35,6 +34,7 @@ export default function DonasiDetail() {
         }
 
         const data = await res.json();
+        // ✅ PERBAIKAN: Mengambil dari data.data sesuai format API
         setKampanye(data.data);
       } catch (err) {
         console.error('Gagal mengambil detail kampanye:', err);
@@ -119,7 +119,10 @@ export default function DonasiDetail() {
           <Card className="max-w-4xl mx-auto border-0 shadow-lg bg-white">
             <CardHeader>
               <CardTitle className="text-2xl text-[#374151] font-bold">{kampanye.judul}</CardTitle>
-              <p className="text-[#6B7280]">{kampanye.is_active ? 'Kampanye Aktif' : 'Kampanye Tidak Aktif'}</p>
+              {/* ✅ PERBAIKAN: Tampilkan status dengan benar */}
+              <p className="text-[#6B7280]">
+                {kampanye.is_active ? 'Kampanye Aktif' : 'Kampanye Tidak Aktif'}
+              </p>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col md:flex-row gap-8">
@@ -145,12 +148,14 @@ export default function DonasiDetail() {
                     <p className="text-[#374151] font-medium">Jumlah Donatur: <span className="font-bold">{donasis.length}</span></p>
                   </div>
                   <div className="mt-6">
+                    {/* ✅ PERBAIKAN: Nonaktifkan tombol jika kampanye tidak aktif */}
                     <Button
                       className="w-full bg-[#FACC15] hover:bg-[#e0b70a] text-black"
                       onClick={() => navigate(`/donasi/form`, { state: { kampanyeId: id, kampanyeJudul: kampanye.judul } })}
+                      disabled={!kampanye.is_active}
                     >
                       <Target className="mr-2 h-4 w-4" />
-                      Donasi untuk Kampanye Ini
+                      {kampanye.is_active ? 'Donasi untuk Kampanye Ini' : 'Kampanye Tidak Aktif'}
                     </Button>
                   </div>
                 </div>

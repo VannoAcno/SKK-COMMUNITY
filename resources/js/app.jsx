@@ -59,6 +59,7 @@ import TransaksiKampanye from './components/admin-pages/Donasi/TransaksiKampanye
 import DonasiPerBulan from './components/admin-pages/Donasi/DonasiPerBulan';
 import RiwayatDonasi from './components/pages/donasi-flow/RiwayatDonasi';
 import TransaksiDetail from './components/admin-pages/Donasi/TransaksiDetail';
+import DonasiForm from './components/pages/donasi-flow/DonasiForm';
 
 console.log("✅ LandingPage imported, mounting React...");
 
@@ -96,6 +97,7 @@ ReactDOM.createRoot(document.getElementById('app')).render(
         <Route path="/galeri" element={<ProtectedRoute><Galeri /></ProtectedRoute>} />
         <Route path="/donasi" element={<ProtectedRoute><Donasi /></ProtectedRoute>} />
         <Route path="/donasi/:id" element={<ProtectedRoute><DonasiDetail /></ProtectedRoute>} />
+        <Route path="/donasi/form" element={<ProtectedRoute><DonasiForm /></ProtectedRoute>} />
         <Route path="/riwayat-donasi" element={<ProtectedRoute><RiwayatDonasi /></ProtectedRoute>} />
         <Route path="/forum" element={<ProtectedRoute><Forum /></ProtectedRoute>} />
         <Route path="/forum/:id" element={<ProtectedRoute><ForumDetail /></ProtectedRoute>} />

@@ -7,7 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, Plus, Edit, Trash2, CheckCircle, Users, Target } from 'lucide-react';
 import AdminSidebar from '@/components/shared/AdminSidebar';
 import Footer from '@/components/shared/Footer';
-import Swal from 'sweetalert2'; // Tambahkan import ini
+import Swal from 'sweetalert2';
 
 export default function KegiatanAdmin() {
   const [admin, setAdmin] = useState(null);
@@ -38,7 +38,6 @@ export default function KegiatanAdmin() {
       setKegiatans(data);
     } catch (err) {
       console.error('Gagal mengambil kegiatan:', err);
-      // alert(`Gagal mengambil daftar kegiatan: ${err.message}`); // ❌ GANTI INI
       Swal.fire({
         icon: 'error',
         title: 'Gagal',
@@ -51,7 +50,6 @@ export default function KegiatanAdmin() {
   };
 
   const handleDelete = async (id) => {
-    // const result = window.confirm('Yakin ingin menghapus kegiatan ini?'); // ❌ GANTI INI
     const result = await Swal.fire({
       title: 'Yakin ingin menghapus kegiatan ini?',
       text: "Kegiatan akan dihapus permanen dari database.",
@@ -72,7 +70,6 @@ export default function KegiatanAdmin() {
         });
         if (!res.ok) throw new Error('Gagal menghapus dari server');
         setKegiatans(kegiatans.filter(k => k.id !== id));
-        // alert('Kegiatan dihapus dari database.'); // ❌ GANTI INI
         Swal.fire({
           icon: 'success',
           title: 'Berhasil!',
@@ -81,7 +78,6 @@ export default function KegiatanAdmin() {
         });
       } catch (err) {
         console.error('Gagal menghapus kegiatan:', err);
-        // alert(`Gagal menghapus kegiatan: ${err.message}`); // ❌ GANTI INI
         Swal.fire({
           icon: 'error',
           title: 'Gagal',
@@ -93,10 +89,9 @@ export default function KegiatanAdmin() {
   };
 
   const handleSelesaikan = async (id) => {
-    // const result = window.confirm("Yakin ingin menyelesaikan kegiatan ini?"); // ❌ GANTI INI
     const result = await Swal.fire({
       title: 'Yakin ingin menyelesaikan kegiatan ini?',
-      text: "Kegiatan akan diubah menjadi laporan dan tidak akan muncul di daftar agenda.",
+      text: "Kegiatan akan diubah menjadi tidak aktif dan tidak akan muncul di daftar agenda publik.",
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#FACC15',
@@ -109,13 +104,13 @@ export default function KegiatanAdmin() {
       try {
         const token = localStorage.getItem('auth_token');
         const res = await fetch(`/api/admin/kegiatans/${id}/selesaikan`, {
-          method: 'PUT', // Gunakan PUT atau POST sesuai endpoint Anda
+          method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
             'Accept': 'application/json',
           },
-          // body: JSON.stringify({}), // Jika diperlukan
+          body: JSON.stringify({}),
         });
 
         if (!res.ok) {
@@ -123,9 +118,13 @@ export default function KegiatanAdmin() {
             throw new Error(errorData.message || 'Gagal menyelesaikan kegiatan.');
         }
 
-        const updatedKegiatan = await res.json();
-        setKegiatans(kegiatans.map(k => k.id === id ? updatedKegiatan.data : k));
-        // alert('Kegiatan berhasil diselesaikan.'); // ❌ GANTI INI
+        // ✅ PERBAIKAN: LANGSUNG UPDATE STATE TANPA MENGANDALKAN RESPONSE
+        setKegiatans(prevKegiatans => 
+          prevKegiatans.map(k => 
+            k.id === id ? { ...k, is_active: false } : k
+          )
+        );
+
         Swal.fire({
           icon: 'success',
           title: 'Berhasil!',
@@ -134,7 +133,6 @@ export default function KegiatanAdmin() {
         });
       } catch (err) {
         console.error('Gagal menyelesaikan kegiatan:', err);
-        // alert(`Gagal menyelesaikan kegiatan: ${err.message}`); // ❌ GANTI INI
         Swal.fire({
           icon: 'error',
           title: 'Gagal',
@@ -215,8 +213,8 @@ export default function KegiatanAdmin() {
                               {formatTanggal(kegiatan.tanggal_mulai)} → {formatTanggal(kegiatan.tanggal_selesai)}
                             </p>
                             <div className="mt-3 flex items-center gap-2 text-xs">
-                              <Badge variant={kegiatan.tipe === 'agenda' ? 'default' : 'secondary'} className="capitalize">
-                                {kegiatan.tipe}
+                              <Badge variant="default" className="capitalize">
+                                Agenda
                               </Badge>
                               <Badge variant={kegiatan.is_active ? 'default' : 'secondary'}>
                                 {kegiatan.is_active ? 'Aktif' : 'Tidak Aktif'}
@@ -235,7 +233,7 @@ export default function KegiatanAdmin() {
                                 </Link>
                               </Button>
 
-                              {kegiatan.tipe === 'agenda' && (
+                              {kegiatan.tipe === 'agenda' && kegiatan.is_active && (
                                 <Button
                                   size="sm"
                                   variant="outline"

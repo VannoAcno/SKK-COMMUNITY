@@ -1,22 +1,22 @@
-// resources/js/pages/admin/DonasiAdmin.jsx
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Edit, Trash2, Users, CreditCard, Eye } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Users, CreditCard, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AdminSidebar from '@/components/shared/AdminSidebar';
 import Footer from '@/components/shared/Footer';
 import TambahKampanyeForm from './TambahKampanye';
 import EditKampanyeForm from './EditKampanye';
-import Swal from 'sweetalert2'; // ✅ Import SweetAlert2
+import Swal from 'sweetalert2';
 
 export default function DonasiAdmin() {
   const [admin, setAdmin] = useState(null);
   const [kampanyes, setKampanyes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showTambah, setShowTambah] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -43,10 +43,9 @@ export default function DonasiAdmin() {
       });
       if (!res.ok) throw new Error('Gagal mengambil data');
       const data = await res.json();
-      setKampanyes(data.data);
+      setKampanyes(data.data || data);
     } catch (err) {
       console.error(err);
-      // alert('Gagal memuat kampanye donasi.'); // ❌ GANTI INI
       Swal.fire({
         icon: 'error',
         title: 'Gagal',
@@ -55,50 +54,27 @@ export default function DonasiAdmin() {
       });
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const handleTambahSubmit = async (formData) => {
-    const token = localStorage.getItem('auth_token');
-    const fd = new FormData();
-    fd.append('judul', formData.judul);
-    if (formData.deskripsi) fd.append('deskripsi', formData.deskripsi);
-    if (formData.target) fd.append('target', formData.target);
-    fd.append('is_active', formData.is_active ? '1' : '0');
-    if (formData.gambar) fd.append('gambar', formData.gambar);
+  const handleTambahSuccess = () => {
+    setShowTambah(false);
+    setFormErrors({});
+    
+    Swal.fire({
+      icon: 'success',
+      title: 'Berhasil!',
+      text: 'Kampanye donasi berhasil ditambahkan.',
+      confirmButtonColor: '#FACC15',
+      timer: 1500,
+      showConfirmButton: false,
+    });
 
-    try {
-      const res = await fetch('/api/admin/donasi-kampanye', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: fd,
-      });
-
-      const result = await res.json();
-      if (!res.ok) {
-        if (result.errors) setFormErrors(result.errors);
-        throw new Error(result.message || 'Gagal menyimpan.');
-      }
-
-      // alert(result.message); // ❌ GANTI INI
-      Swal.fire({
-        icon: 'success',
-        title: 'Berhasil!',
-        text: result.message,
-        confirmButtonColor: '#FACC15',
-      });
-      setShowTambah(false);
-      setFormErrors({});
+    setRefreshing(true);
+    setTimeout(() => {
       fetchKampanyes();
-    } catch (err) {
-      // alert(`Error: ${err.message}`); // ❌ GANTI INI
-      Swal.fire({
-        icon: 'error',
-        title: 'Gagal',
-        text: `Error: ${err.message}`,
-        confirmButtonColor: '#FACC15',
-      });
-    }
+    }, 1000);
   };
 
   const handleEditSubmit = async (formData) => {
@@ -124,19 +100,23 @@ export default function DonasiAdmin() {
         throw new Error(result.message || 'Gagal memperbarui.');
       }
 
-      // alert(result.message); // ❌ GANTI INI
+      setShowEdit(false);
+      setEditingKampanye(null);
+      setFormErrors({});
+      
       Swal.fire({
         icon: 'success',
         title: 'Berhasil!',
         text: result.message,
         confirmButtonColor: '#FACC15',
       });
-      setShowEdit(false);
-      setEditingKampanye(null);
-      setFormErrors({});
-      fetchKampanyes();
+      
+      setRefreshing(true);
+      setTimeout(() => {
+        fetchKampanyes();
+      }, 500);
+
     } catch (err) {
-      // alert(`Error: ${err.message}`); // ❌ GANTI INI
       Swal.fire({
         icon: 'error',
         title: 'Gagal',
@@ -147,7 +127,6 @@ export default function DonasiAdmin() {
   };
 
   const handleDelete = async (id) => {
-    // if (!confirm('Hapus kampanye ini? Semua transaksi terkait juga akan dihapus.')) return; // ❌ GANTI INI
     const result = await Swal.fire({
       title: 'Yakin ingin menghapus kampanye ini?',
       text: "Semua transaksi terkait juga akan dihapus.",
@@ -167,16 +146,21 @@ export default function DonasiAdmin() {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (!res.ok) throw new Error('Gagal menghapus');
-        // alert('Kampanye berhasil dihapus.'); // ❌ GANTI INI
+        
         Swal.fire({
           icon: 'success',
           title: 'Berhasil!',
           text: 'Kampanye berhasil dihapus.',
           confirmButtonColor: '#FACC15',
+          timer: 1500,
+          showConfirmButton: false,
         });
-        fetchKampanyes();
+        
+        setRefreshing(true);
+        setTimeout(() => {
+          fetchKampanyes();
+        }, 500);
       } catch (err) {
-        // alert('Gagal menghapus kampanye.'); // ❌ GANTI INI
         Swal.fire({
           icon: 'error',
           title: 'Gagal',
@@ -190,7 +174,7 @@ export default function DonasiAdmin() {
   if (!admin) return <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center">Memuat...</div>;
 
   const filtered = kampanyes.filter(k =>
-    k.judul.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    k.judul?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (k.deskripsi && k.deskripsi.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
@@ -231,7 +215,7 @@ export default function DonasiAdmin() {
                       <TambahKampanyeForm
                         open={showTambah}
                         onOpenChange={setShowTambah}
-                        onSubmit={handleTambahSubmit}
+                        onSubmit={handleTambahSuccess}
                         errors={formErrors}
                       />
                     </Dialog>
@@ -249,6 +233,13 @@ export default function DonasiAdmin() {
                       />
                     </div>
                   </div>
+
+                  {refreshing && (
+                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-center text-blue-700">
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <span className="text-sm font-medium">Memperbarui data...</span>
+                    </div>
+                  )}
 
                   {loading ? (
                     <div className="text-center py-8 text-[#6B7280]">Memuat data...</div>
@@ -305,7 +296,6 @@ export default function DonasiAdmin() {
                                 {k.deskripsi || '-'}
                               </p>
 
-                              {/* Progress Donasi */}
                               {k.target && (
                                 <div className="space-y-1 mt-3">
                                   <div className="flex justify-between text-xs text-[#6B7280]">
@@ -330,7 +320,6 @@ export default function DonasiAdmin() {
                                 </div>
                               )}
 
-                              {/* Aksi */}
                               <div className="mt-4 flex flex-wrap gap-2">
                                 <Button
                                   size="sm"
