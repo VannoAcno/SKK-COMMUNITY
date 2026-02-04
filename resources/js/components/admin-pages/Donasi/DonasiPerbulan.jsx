@@ -239,7 +239,7 @@ export default function DonasiPerBulan() {
                     <div className="mb-6 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                       <div className="flex items-center gap-3">
                         <button
-                          onClick={() => navigate("/admin")}
+                          onClick={() => navigate("/admin/dashboard")}
                           className="text-[#374151] hover:text-[#FACC15] transition-colors"
                         >
                           <ArrowLeft size={24} />
