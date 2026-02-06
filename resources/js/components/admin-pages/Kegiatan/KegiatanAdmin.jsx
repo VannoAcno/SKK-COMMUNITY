@@ -1,4 +1,3 @@
-// resources/js/pages/admin/KegiatanAdmin.jsx
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -118,7 +117,6 @@ export default function KegiatanAdmin() {
             throw new Error(errorData.message || 'Gagal menyelesaikan kegiatan.');
         }
 
-        // ✅ PERBAIKAN: LANGSUNG UPDATE STATE TANPA MENGANDALKAN RESPONSE
         setKegiatans(prevKegiatans => 
           prevKegiatans.map(k => 
             k.id === id ? { ...k, is_active: false } : k
@@ -216,9 +214,11 @@ export default function KegiatanAdmin() {
                               <Badge variant="default" className="capitalize">
                                 Agenda
                               </Badge>
-                              <Badge variant={kegiatan.is_active ? 'default' : 'secondary'}>
-                                {kegiatan.is_active ? 'Aktif' : 'Tidak Aktif'}
-                              </Badge>
+                              {kegiatan.is_active ? (
+                                <Badge variant="default">Aktif</Badge>
+                              ) : (
+                                <Badge variant="secondary">Tidak Aktif</Badge>
+                              )}
                             </div>
                             <div className="mt-4 flex flex-wrap gap-2">
                               <Button
@@ -233,7 +233,7 @@ export default function KegiatanAdmin() {
                                 </Link>
                               </Button>
 
-                              {kegiatan.tipe === 'agenda' && kegiatan.is_active && (
+                              {kegiatan.tipe === 'agenda' && kegiatan.is_active ? (
                                 <Button
                                   size="sm"
                                   variant="outline"
@@ -243,7 +243,7 @@ export default function KegiatanAdmin() {
                                   <CheckCircle size={14} className="mr-1" />
                                   Selesaikan
                                 </Button>
-                              )}
+                              ) : null}
 
                               <Button
                                 size="sm"

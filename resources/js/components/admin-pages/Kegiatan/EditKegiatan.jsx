@@ -18,6 +18,7 @@ export default function EditKegiatan() {
     tanggal_mulai: '',
     tanggal_selesai: '',
     tipe: 'agenda',
+    is_active: true,
     gambar: null,
     gambar_file: null
   });
@@ -40,6 +41,7 @@ export default function EditKegiatan() {
       
       setKegiatan({
         ...data,
+        is_active: data.is_active === true || data.is_active === 1 || data.is_active === '1',
         gambar: data.gambar || null,
         gambar_file: null
       });
@@ -57,10 +59,10 @@ export default function EditKegiatan() {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setKegiatan(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
@@ -108,16 +110,22 @@ export default function EditKegiatan() {
       formData.append('tanggal_selesai', kegiatan.tanggal_selesai);
       formData.append('tipe', kegiatan.tipe);
       
+      // ✅ SOLUSI: Pastikan is_active SELALU dikirim sebagai string '1' atau '0'
+      formData.append('is_active', kegiatan.is_active ? '1' : '0');
+      
       if (kegiatan.gambar_file) {
         formData.append('gambar', kegiatan.gambar_file);
       }
 
+      // ✅ SOLUSI: Tambahkan _method=PUT untuk Laravel agar mengenali sebagai PUT request
       formData.append('_method', 'PUT');
 
       const response = await fetch(`/api/admin/kegiatans/${id}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
+          // ❌ JANGAN SET Content-Type manual untuk FormData!
+          // Browser akan otomatis set boundary yang benar
         },
         body: formData
       });
@@ -278,6 +286,26 @@ export default function EditKegiatan() {
                     <SelectItem value="agenda">Agenda</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* ✅ CHECKBOX is_active DIPERBAIKI */}
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="is_active"
+                    name="is_active"
+                    checked={kegiatan.is_active}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-[#FACC15] border-[#E5E7EB] rounded focus:ring-[#FACC15] focus:ring-offset-0"
+                  />
+                  <Label htmlFor="is_active" className="text-[#374151] font-medium">
+                    Aktifkan kegiatan ini
+                  </Label>
+                </div>
+                <p className="text-xs text-[#6B7280] ml-6">
+                  {kegiatan.is_active ? '✓ Kegiatan akan ditampilkan di halaman publik' : '✗ Kegiatan tidak akan ditampilkan di halaman publik'}
+                </p>
               </div>
 
               <div className="flex gap-3 pt-4">
